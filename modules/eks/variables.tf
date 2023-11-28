@@ -15,7 +15,6 @@ variable "cluster_version" {
   default     = "1.28"
 }
 
-# https://github.com/aws-ia/terraform-aws-eks-blueprints-addons/blob/0e9d6c9b7115ecf0404c377c9c2529bffa56d10d/docs/amazon-eks-addons.md
 variable "cluster_addons" {
   description = "AWS EKS cluster addons map, default is latest coredns, kube-proxy, vpc-cni, aws-ebs-csi-driver, snapshot-controller"
   type        = map(any)
@@ -108,19 +107,7 @@ variable "eks_managed_node_groups" {
 variable "fargate_profiles" {
   description = "Configs for fargate_profiles"
   type        = map(string)
-  default     = {
-    system = {
-      selectors = [
-        { namespace = "kube-system" },
-        { namespace = "cert-manager" },
-        { namespace = "aws-node-termination-handler" },
-        { namespace = "vpa" }
-      ]
-      labels    = {
-        "fargate-profile" = "system"
-      }
-    }
-  }
+  default     = {}
 }
 
 variable "admin_iam_roles" {
@@ -150,40 +137,4 @@ variable "tags" {
   description = "Tags for EKS"
   type        = map(string)
   default     = { Terraform = "true" }
-}
-
-variable "enable_aws_efs_csi_driver" {
-  description = "Install latest AWS EFS CSI driver"
-  type        = bool
-  default     = true
-}
-
-variable "enable_aws_node_termination_handler" {
-  description = "Install latest AWS node termination handler"
-  type        = bool
-  default     = true
-}
-
-variable "enable_cert_manager" {
-  description = "Install latest cert-manager"
-  type        = bool
-  default     = true
-}
-
-variable "enable_cluster_autoscaler" {
-  description = "Install latest cluster autoscaler"
-  type        = bool
-  default     = true
-}
-
-variable "enable_metrics_server" {
-  description = "Install latest metrics server"
-  type        = bool
-  default     = true
-}
-
-variable "enable_vpa" {
-  description = "Install latest Vertical Pod Autoscaler"
-  type        = bool
-  default     = true
 }

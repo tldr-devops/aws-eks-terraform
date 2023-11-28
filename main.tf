@@ -2,135 +2,89 @@ provider "kubernetes" {
   host                   = module.eks.cluster_endpoint
   cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
 
-  # This requires the awscli to be installed locally where Terraform is executed
   exec {
     api_version = "client.authentication.k8s.io/v1beta1"
     command     = "aws"
+    # This requires the awscli to be installed locally where Terraform is executed
     args = ["eks", "get-token", "--cluster-name", module.eks.cluster_name]
   }
 }
 
-locals {
-  vpc_id = coalesce(var.vpc_id, data.aws_vpc.default.id)
+provider "helm" {
+  kubernetes {
+    host                   = module.eks.cluster_endpoint
+    cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
 
-  self_managed_node_group_defaults = coalesce(var.self_managed_node_group_defaults, var.group_defaults)
-  eks_managed_node_group_defaults = coalesce(var.eks_managed_node_group_defaults, var.group_defaults)
-  fargate_profile_defaults = coalesce(var.fargate_profile_defaults, var.group_defaults)
-
-  aws_auth_users = [
-    for u in var.admin_iam_users : {
-      userarn  = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:user/${u}"
-      username = u
-      groups   = ["system:masters"]
+    exec {
+      api_version = "client.authentication.k8s.io/v1beta1"
+      command     = "aws"
+      # This requires the awscli to be installed locally where Terraform is executed
+      args = ["eks", "get-token", "--cluster-name", module.eks.cluster_name]
     }
-  ]
-
-  aws_auth_roles = [
-    for u in var.admin_iam_roles : {
-      userarn  = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${u}"
-      username = u
-      groups   = ["system:masters"]
-    }
-  ]
-}
-
-data "aws_region" "current" {}
-
-data "aws_caller_identity" "current" {}
-
-data "aws_vpc" "default" {
-  default = true
-}
-
-data "aws_vpc" "target" {
-  id = local.vpc_id
-}
-
-data "aws_subnets" "vpc_subnets" {
-  filter {
-    name   = "vpc-id"
-    values = [local.vpc_id]
   }
 }
 
-################################################################################
-# EKS
-# Full example https://github.com/terraform-aws-modules/terraform-aws-eks/blob/master/examples/complete/main.tf
-################################################################################
+provider "kubectl" {
+  apply_retry_count      = 5
+  host                   = module.eks.cluster_endpoint
+  cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
+  load_config_file       = false
+
+  exec {
+    api_version = "client.authentication.k8s.io/v1beta1"
+    command     = "aws"
+    # This requires the awscli to be installed locally where Terraform is executed
+    args = ["eks", "get-token", "--cluster-name", module.eks.cluster_name]
+  }
+}
 
 module "eks" {
-  source  = "terraform-aws-modules/eks/aws"
-  version = "~> 19.0"
+  source = "./modules/eks"
 
-  cluster_name    = var.cluster_name
-  # https://docs.aws.amazon.com/eks/latest/userguide/kubernetes-versions.html
-  cluster_version = "1.28"
-
-  cluster_endpoint_public_access  = true
-  enable_irsa = true
-
-  # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/eks_addon
-  cluster_addons = var.cluster_addons
-
-  vpc_id                   = local.vpc_id
-  subnet_ids               = data.aws_subnets.vpc_subnets.ids
-  # control_plane_subnet_ids = data.aws_subnets.vpc_subnets.ids
-
-  self_managed_node_group_defaults = local.self_managed_node_group_defaults
-  eks_managed_node_group_defaults = local.eks_managed_node_group_defaults
-  fargate_profile_defaults = local.fargate_profile_defaults
-
+  vpc_id = var.vpc_id
+  cluster_name = var.cluster_name
+  cluster_version = var.cluster_version
+  # cluster_addons = var.cluster_addons
+  self_managed_node_group_defaults = var.self_managed_node_group_defaults
+  eks_managed_node_group_defaults = var.eks_managed_node_group_defaults
+  fargate_profile_defaults = var.fargate_profile_defaults
+  group_defaults = var.group_defaults
   self_managed_node_groups = var.self_managed_node_groups
   eks_managed_node_groups = var.eks_managed_node_groups
   fargate_profiles = var.fargate_profiles
-
-  # aws-auth configmap
-  manage_aws_auth_configmap = false
-  create_aws_auth_configmap = false
-
-  # https://docs.aws.amazon.com/eks/latest/userguide/control-plane-logs.html
-  cloudwatch_log_group_retention_in_days = 30 # default is 90
-
-  aws_auth_roles = local.aws_auth_roles
-  aws_auth_users = local.aws_auth_users
-  aws_auth_accounts = [
-    data.aws_caller_identity.current.account_id
-  ]
-
+  admin_iam_roles = var.admin_iam_roles
+  admin_iam_users = var.admin_iam_users
+  eks_iam_roles = var.eks_iam_roles
   tags = var.tags
 }
 
-resource "kubernetes_service_account" "accounts" {
-  for_each = var.eks_iam_roles
+module "addons" {
+  source = "aws-ia/eks-blueprints-addons/aws"
 
-  metadata {
-    name      = each.role_name
-    namespace = each.role_namespace
-    annotations = {
-      "eks.amazonaws.com/role-arn" = each.role_arn
-    }
-  }
-  automount_service_account_token = true
-}
+  cluster_name      = module.eks.cluster_name
+  cluster_endpoint  = module.eks.cluster_endpoint
+  cluster_version   = module.eks.cluster_version
+  oidc_provider_arn = module.eks.oidc_provider_arn
 
-module "iam_eks_role" {
-  source    = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
-  for_each = var.eks_iam_roles
+  eks_addons = var.cluster_addons
 
-  role_name = each.role_name
+  # https://github.com/aws-ia/terraform-aws-eks-blueprints-addons/blob/0e9d6c9b7115ecf0404c377c9c2529bffa56d10d/docs/addons/aws-efs-csi-driver.md
+  enable_aws_efs_csi_driver = var.enable_aws_efs_csi_driver
 
-  role_policy_arns = each.role_policy_arns
+  # https://github.com/aws-ia/terraform-aws-eks-blueprints-addons/blob/0e9d6c9b7115ecf0404c377c9c2529bffa56d10d/docs/addons/aws-node-termination-handler.md
+  enable_aws_node_termination_handler = var.enable_aws_node_termination_handler
 
-  oidc_providers = {
-    default = {
-      provider_arn               = module.eks.oidc_provider_arn
-      namespace_service_accounts = ["${each.role_namespace}:${each.role_name}"]
-    }
-  }
-}
+  # https://github.com/aws-ia/terraform-aws-eks-blueprints-addons/blob/0e9d6c9b7115ecf0404c377c9c2529bffa56d10d/docs/addons/cert-manager.md
+  enable_cert_manager = var.enable_cert_manager
 
-resource "null_resource" "kubectl" {
-    provisioner "local-exec" {
-        command = "aws eks --region ${data.aws_region.current"} update-kubeconfig --name ${module.eks.cluster_name} --kubeconfig ~/.kube/eks-${data.aws_region.current"}-${module.eks.cluster_name}"
-    }
+  # https://github.com/aws-ia/terraform-aws-eks-blueprints-addons/blob/0e9d6c9b7115ecf0404c377c9c2529bffa56d10d/docs/addons/cluster-autoscaler.md
+  enable_cluster_autoscaler = var.enable_cluster_autoscaler
+
+  # https://github.com/aws-ia/terraform-aws-eks-blueprints-addons/blob/0e9d6c9b7115ecf0404c377c9c2529bffa56d10d/docs/addons/metrics-server.md
+  enable_metrics_server = var.enable_metrics_server
+
+  # https://github.com/aws-ia/terraform-aws-eks-blueprints-addons/blob/0e9d6c9b7115ecf0404c377c9c2529bffa56d10d/docs/addons/vertical-pod-autoscaler.md
+  enable_vpa = var.enable_vpa
+
+  tags = var.tags
 }

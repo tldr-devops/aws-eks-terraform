@@ -3,23 +3,12 @@
 [![#StandWithBelarus](https://img.shields.io/badge/Belarus-red?label=%23%20Stand%20With&labelColor=white&color=red)
 <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Presidential_Standard_of_Belarus_%28fictional%29.svg/240px-Presidential_Standard_of_Belarus_%28fictional%29.svg.png" width="20" height="20" alt="Voices From Belarus" />](https://bysol.org/en/) [![Stand With Ukraine](https://raw.githubusercontent.com/vshymanskyy/StandWithUkraine/main/badges/StandWithUkraine.svg)](https://vshymanskyy.github.io/StandWithUkraine)
 
-Setup basic EKS cluster with necessary controllers. Examples for further configuring the EKS cluster can be found in [eks blueprints](https://github.com/aws-ia/terraform-aws-eks-blueprints/tree/main), [tEKS](https://github.com/particuleio/teks) and [eks demo](https://github.com/awslabs/eksdemo) repos.
-
-## Depend on
-- terraform
-- helm
-- kubectl
-- [terraform-aws-eks](https://github.com/terraform-aws-modules/terraform-aws-eks)
-
-## Example
-```
-
-```
+Sugar for [terraform-aws-eks](https://github.com/terraform-aws-modules/terraform-aws-eks). Examples for further configuring the EKS cluster can be found in [eks blueprints](https://github.com/aws-ia/terraform-aws-eks-blueprints/tree/main), [tEKS](https://github.com/particuleio/teks) and [eks demo](https://github.com/awslabs/eksdemo) repos.
 
 ## Variables
 
-| Name | Description | Type | Required |
-|------|-------------|------|:--------:|
+|Name|Description|Type|Required|
+|----|-----------|----|:------:|
 |vpc_id|ID of target VPC, 'default' will be used by default|string|no|
 |cluster_name|AWS EKS cluster name|string|yes|
 |cluster_version|AWS EKS cluster version|string|no|
@@ -34,23 +23,46 @@ Setup basic EKS cluster with necessary controllers. Examples for further configu
 |admin_iam_roles|List of account roles that should have EKS amdin permissions|list(string)|no|
 |admin_iam_users|List of account users that should have EKS amdin permissions|list(string)|no|
 |eks_iam_roles|List of maps with iam roles that should map eks service accounts|list(object)|no|
-|enable_aws_efs_csi_driver|Install latest AWS EFS CSI driver|bool|no|
-|enable_aws_node_termination_handler|Install latest AWS node termination handler|bool|no|
-|enable_cert_manager|Install latest cert-manager|bool|no|
-|enable_cluster_autoscaler|Install latest cluster autoscaler|bool|no|
-|enable_metrics_server|Install latest metrics server|bool|no|
-|enable_vpa|Install latest Vertical Pod Autoscaler|bool|no|
 |tags|Tags for EKS|map(string)|no|
 
 ## Outputs
 
-| Name | Description |
-|------|-------------|
+|Name|Description|
+|----|-----------|
 |region|The AWS region|
 |vpc_id|The ID of the target VPC|
-|cluster_name|The name of the EKS|
-|cluster_endpoint|Endpoint for your Kubernetes API server|
+|cloudwatch_log_group_arn|Arn of cloudwatch log group created|
+|cloudwatch_log_group_name|Name of cloudwatch log group created|
+|cluster_addons|Map of attribute maps for all EKS cluster addons enabled|
+|cluster_arn|The Amazon Resource Name (ARN) of the cluster|
 |cluster_certificate_authority_data|Base64 encoded certificate data required to communicate with the cluster|
+|cluster_endpoint|Endpoint for your Kubernetes API server|
+|cluster_iam_role_arn|IAM role ARN of the EKS cluster|
+|cluster_iam_role_name|IAM role name of the EKS cluster|
+|cluster_iam_role_unique_id|Stable and unique string identifying the IAM role|
+|cluster_id|The ID of the EKS cluster. Note: currently a value is returned only for local EKS clusters created on Outposts|
+|cluster_identity_providers|Map of attribute maps for all EKS identity providers enabled|
+|cluster_name|The name of the EKS cluster|
+|cluster_oidc_issuer_url|The URL on the EKS cluster for the OpenID Connect identity provider|
+|cluster_platform_version|Platform version for the cluster|
+|cluster_primary_security_group_id|Cluster security group that was created by Amazon EKS for the cluster. Managed node groups use this security group for control-plane-to-data-plane communication. Referred to as 'Cluster security group' in the EKS console|
+|cluster_security_group_arn|Amazon Resource Name (ARN) of the cluster security group|
+|cluster_security_group_id|ID of the cluster security group|
+|cluster_status|Status of the EKS cluster. One of CREATING, ACTIVE, DELETING, FAILED|
+|cluster_tls_certificate_sha1_fingerprint|The SHA1 fingerprint of the public key of the cluster's certificate|
+|cluster_version|The Kubernetes version for the cluster|
+|eks_managed_node_groups|Map of attribute maps for all EKS managed node groups created|
+|eks_managed_node_groups_autoscaling_group_names|List of the autoscaling group names created by EKS managed node groups|
+|fargate_profiles|Map of attribute maps for all EKS Fargate Profiles created|
+|kms_key_arn|The Amazon Resource Name (ARN) of the key|
+|kms_key_id|The globally unique identifier for the key|
+|kms_key_policy|The IAM resource policy set on the key|
+|node_security_group_arn|Amazon Resource Name (ARN) of the node shared security group|
+|node_security_group_id|ID of the node shared security group|
+|oidc_provider|The OpenID Connect identity provider (issuer URL without leading https://)|
+|oidc_provider_arn|The ARN of the OIDC Provider if enable_irsa = true|
+|self_managed_node_groups|Map of attribute maps for all self managed node groups created|
+|self_managed_node_groups_autoscaling_group_names|List of the autoscaling group names created by self-managed node groups|
 
 Also `~/.kube/eks-${data.aws_region.current"}-${module.eks.cluster_name}` will be created by `aws eks` utility.
 
