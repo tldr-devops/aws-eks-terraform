@@ -13,9 +13,9 @@ provider "kubernetes" {
 locals {
   vpc_id = coalesce(var.vpc_id, data.aws_vpc.default.id)
 
-  self_managed_node_group_defaults = coalesce(var.self_managed_node_group_defaults, var.group_defaults)
-  eks_managed_node_group_defaults = coalesce(var.eks_managed_node_group_defaults, var.group_defaults)
-  fargate_profile_defaults = coalesce(var.fargate_profile_defaults, var.group_defaults)
+  self_managed_node_group_defaults = merge(var.self_managed_node_group_defaults, var.group_defaults)
+  eks_managed_node_group_defaults = merge(var.eks_managed_node_group_defaults, var.group_defaults)
+  fargate_profile_defaults = merge(var.fargate_profile_defaults, var.group_defaults)
 
   aws_auth_users = [
     for u in var.admin_iam_users : {
@@ -101,13 +101,13 @@ module "eks" {
 }
 
 resource "kubernetes_service_account" "accounts" {
-  for_each = var.eks_iam_roles
+  count = length(var.eks_iam_roles)
 
   metadata {
-    name      = each.role_name
-    namespace = each.role_namespace
+    name      = var.eks_iam_roles[count.index].role_name
+    namespace = var.eks_iam_roles[count.index].role_namespace
     annotations = {
-      "eks.amazonaws.com/role-arn" = each.role_arn
+      "eks.amazonaws.com/role-arn" = var.eks_iam_roles[count.index].role_arn
     }
   }
   automount_service_account_token = true
@@ -115,22 +115,22 @@ resource "kubernetes_service_account" "accounts" {
 
 module "iam_eks_role" {
   source    = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
-  for_each = var.eks_iam_roles
+  count = length(var.eks_iam_roles)
 
-  role_name = each.role_name
+  role_name = var.eks_iam_roles[count.index].role_name
 
-  role_policy_arns = each.role_policy_arns
+  role_policy_arns = var.eks_iam_roles[count.index].role_policy_arns
 
   oidc_providers = {
     default = {
       provider_arn               = module.eks.oidc_provider_arn
-      namespace_service_accounts = ["${each.role_namespace}:${each.role_name}"]
+      namespace_service_accounts = ["${var.eks_iam_roles[count.index].role_namespace}:${var.eks_iam_roles[count.index].role_name}"]
     }
   }
 }
 
 resource "null_resource" "kubectl" {
     provisioner "local-exec" {
-        command = "aws eks --region ${data.aws_region.current"} update-kubeconfig --name ${module.eks.cluster_name} --kubeconfig ~/.kube/eks-${data.aws_region.current"}-${module.eks.cluster_name}"
+        command = "aws eks --region ${data.aws_region.current.name} update-kubeconfig --name ${module.eks.cluster_name} --kubeconfig ~/.kube/eks-${data.aws_region.current.name}-${module.eks.cluster_name}"
     }
 }

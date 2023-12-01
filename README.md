@@ -35,11 +35,17 @@ Setup basic EKS cluster with necessary controllers. Examples for further configu
 |admin_iam_users|List of account users that should have EKS amdin permissions|list(string)|no|
 |eks_iam_roles|List of maps with iam roles that should map eks service accounts|list(object)|no|
 |enable_aws_efs_csi_driver|Install latest AWS EFS CSI driver|bool|no|
+|aws_efs_csi_driver_config|AWS EFS CSI driver configuration|map|no|
 |enable_aws_node_termination_handler|Install latest AWS node termination handler|bool|no|
+|aws_node_termination_handler_config|AWS node termination handler configuration|map|no|
 |enable_cert_manager|Install latest cert-manager|bool|no|
+|cert_manager_config|Cert manager configuration|map|no|
 |enable_cluster_autoscaler|Install latest cluster autoscaler|bool|no|
+|cluster_autoscaler_config|Cluster autoscaler configuration|map|no|
 |enable_metrics_server|Install latest metrics server|bool|no|
+|metrics_server_config|Metrics server configuration|map|no|
 |enable_vpa|Install latest Vertical Pod Autoscaler|bool|no|
+|vpa_config|Vertical Pod Autoscaler configuration|map|no|
 |tags|Tags for EKS|map(string)|no|
 
 ## Outputs

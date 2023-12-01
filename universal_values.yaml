@@ -1,0 +1,8 @@
+nodeSelector:
+  kubernetes.io/os: linux
+  node.kubernetes.io/purpose: management
+tolerations:
+- key: node.kubernetes.io/purpose
+  operator: Equal
+  value: management
+  effect: NoSchedule

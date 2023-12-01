@@ -17,7 +17,7 @@ variable "cluster_version" {
 
 variable "cluster_addons" {
   description = "AWS EKS cluster addons map, default is latest coredns, kube-proxy, vpc-cni, aws-ebs-csi-driver, snapshot-controller"
-  type        = map(any)
+  type        = any
   default     = {
     coredns = {
       most_recent = true
@@ -39,19 +39,19 @@ variable "cluster_addons" {
 
 variable "self_managed_node_group_defaults" {
   description = "Defaults configs for self_managed_node_groups"
-  type        = map(string)
+  type        = any
   default     = {}
 }
 
 variable "eks_managed_node_group_defaults" {
   description = "Defaults configs for eks_managed_node_groups"
-  type        = map(string)
+  type        = any
   default     = {}
 }
 
 variable "fargate_profile_defaults" {
   description = "Defaults configs for fargate_profiles"
-  type        = map(string)
+  type        = any
   default     = {}
 }
 
@@ -59,7 +59,7 @@ variable "fargate_profile_defaults" {
 # https://registry.terraform.io/modules/terraform-aws-modules/eks/aws/latest/submodules/eks-managed-node-group
 variable "group_defaults" {
   description = "Defaults configs for self_managed_node_groups, eks_managed_node_groups and fargate_profiles"
-  type        = map(string)
+  type        = any
   default     = {
     min_size     = 0
     max_size     = 5
@@ -94,19 +94,19 @@ variable "group_defaults" {
 
 variable "self_managed_node_groups" {
   description = "Configs for self_managed_node_groups"
-  type        = map(string)
+  type        = any
   default     = {}
 }
 
 variable "eks_managed_node_groups" {
   description = "Configs for eks_managed_node_groups"
-  type        = map(string)
+  type        = any
   default     = {}
 }
 
 variable "fargate_profiles" {
   description = "Configs for fargate_profiles"
-  type        = map(string)
+  type        = any
   default     = {}
 }
 
@@ -128,13 +128,13 @@ variable "eks_iam_roles" {
     role_name = string
     role_arn = string
     role_namespace = string
-    role_policy_arns = map(string)
+    role_policy_arns = any
   }))
   default = []
 }
 
 variable "tags" {
   description = "Tags for EKS"
-  type        = map(string)
+  type        = any
   default     = { Terraform = "true" }
 }

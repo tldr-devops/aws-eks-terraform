@@ -1,10 +1,10 @@
 output "region" {
-  value       = data.aws_region.current.name
+  value       = module.eks.region
   description = "The AWS region"
 }
 
 output "vpc_id" {
-  value       = data.aws_vpc.target.id
+  value       = module.eks.vpc_id
   description = "The ID of the target VPC"
 }
 
