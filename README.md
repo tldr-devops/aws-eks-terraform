@@ -21,16 +21,24 @@ Setup basic EKS cluster with necessary controllers. Examples for further configu
 | Name | Description | Type | Required |
 |------|-------------|------|:--------:|
 |vpc_id|ID of target VPC, 'default' will be used by default|string|no|
+|subnets_by_az|List of objects that contain subnets ids sorted by availability zones|list(object)|no|
+|number_of_multi_az|How many availability zones should be used for running control plane and nodes|number|no|
 |cluster_name|AWS EKS cluster name|string|yes|
 |cluster_version|AWS EKS cluster version|string|no|
 |cluster_addons|AWS EKS cluster addons map, default is latest coredns, kube-proxy, vpc-cni, aws-ebs-csi-driver, snapshot-controller|map(any)|no|
-|self_managed_node_group_defaults|Defaults configs for self_managed_node_groups|map(string)|no|
-|eks_managed_node_group_defaults|Defaults configs for eks_managed_node_groups|map(string)|no|
-|fargate_profile_defaults|Defaults configs for fargate_profiles|map(string)|no|
-|group_defaults|Defaults configs for self_managed_node_groups, eks_managed_node_groups and fargate_profiles|map(string)|no|
-|self_managed_node_groups|Configs for self_managed_node_groups|map(string)|no|
-|eks_managed_node_groups|Configs for eks_managed_node_groups|map(string)|no|
-|fargate_profiles|Configs for fargate_profiles|map(string)|no|
+|self_managed_node_group_defaults|Defaults configs for self_managed_node_groups|any|no|
+|eks_managed_node_group_defaults|Defaults configs for eks_managed_node_groups|any|no|
+|fargate_profile_defaults|Defaults configs for fargate_profiles|any|no|
+|group_defaults|Defaults configs for self_managed_node_groups, eks_managed_node_groups and fargate_profiles|any|no|
+|self_managed_node_groups|Configs for self_managed_node_groups|any|no|
+|self_managed_node_group_templates_for_multi_azTemplates for generating similar self managed node group in each availability zone|any|no|
+|self_managed_node_group_number_of_multi_az|How many availability zones should be used for generating self managed node groups from template|number|no|
+|eks_managed_node_groups|Configs for eks_managed_node_groups|any|no|
+|eks_managed_node_group_templates_for_multi_az|Templates for generating similar eks managed node group in each availability zone|any|no|
+|eks_managed_node_group_number_of_multi_az|How many availability zones should be used for generating eks managed node groups from template|number|no|
+|fargate_profiles|Configs for fargate_profiles|any|no|
+|fargate_profile_templates_for_multi_az|Templates for generating similar fargate profiles in each availability zone|any|no|
+|fargate_profile_number_of_multi_az|How many availability zones should be used for generating fargate profiles from template|number|no|
 |admin_iam_roles|List of account roles that should have EKS amdin permissions|list(string)|no|
 |admin_iam_users|List of account users that should have EKS amdin permissions|list(string)|no|
 |eks_iam_roles|List of maps with iam roles that should map eks service accounts|list(object)|no|

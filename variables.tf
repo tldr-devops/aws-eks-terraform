@@ -4,6 +4,21 @@ variable "vpc_id" {
   default     = ""
 }
 
+variable "subnets_by_az" {
+  description = "List of objects that contain subnets ids sorted by availability zones"
+  type        = list(object({
+    subnets = list(string)
+    zone    = string
+  }))
+  default     = null
+}
+
+variable "number_of_multi_az" {
+  description = "How many availability zones should be used for running control plane and nodes"
+  type        = number
+  default     = 3
+}
+
 variable "cluster_name" {
   description = "AWS EKS cluster name"
   type        = string
@@ -50,7 +65,7 @@ variable "group_defaults" {
     max_size     = 5
     desired_size = 0
 
-    instance_types = ["m6a.large", "m5a.large", "m7i-flex.large"] # , "m6i.large", "m5.large", "m4.large", "m7i.large"] # 2cpu 8gb
+    instance_types = ["m6a.large"] #, "m5a.large", "m7i-flex.large", "m6i.large", "m5.large", "m4.large", "m7i.large"] # 2cpu 8gb
     # instance_types = ["c6a.large", "c5a.large", "c6i.large", "c5.large", "c5ad.large", "c5ad.large"] # 2cpu 4gb
 
     capacity_type = "ON_DEMAND" # "SPOT"
@@ -83,16 +98,52 @@ variable "self_managed_node_groups" {
   default     = {}
 }
 
+variable "self_managed_node_group_templates_for_multi_az" {
+  description = "Templates for generating similar self managed node group in each availability zone"
+  type        = any
+  default     = {}
+}
+
+variable "self_managed_node_group_number_of_multi_az" {
+  description = "How many availability zones should be used for generating self managed node groups from template"
+  type        = number
+  default     = 3
+}
+
 variable "eks_managed_node_groups" {
   description = "Configs for eks_managed_node_groups"
   type        = any
   default     = {}
 }
 
+variable "eks_managed_node_group_templates_for_multi_az" {
+  description = "Templates for generating similar eks managed node group in each availability zone"
+  type        = any
+  default     = {}
+}
+
+variable "eks_managed_node_group_number_of_multi_az" {
+  description = "How many availability zones should be used for generating eks managed node groups from template"
+  type        = number
+  default     = 3
+}
+
 variable "fargate_profiles" {
   description = "Configs for fargate_profiles"
   type        = any
   default     = {}
+}
+
+variable "fargate_profile_templates_for_multi_az" {
+  description = "Templates for generating similar fargate profiles in each availability zone"
+  type        = any
+  default     = {}
+}
+
+variable "fargate_profile_number_of_multi_az" {
+  description = "How many availability zones should be used for generating fargate profiles from template"
+  type        = number
+  default     = 3
 }
 
 variable "admin_iam_roles" {
@@ -120,7 +171,7 @@ variable "eks_iam_roles" {
 
 variable "tags" {
   description = "Tags for EKS"
-  type        = any
+  type        = map(any)
   default     = { Terraform = "true" }
 }
 

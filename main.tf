@@ -38,80 +38,196 @@ provider "helm" {
 #   }
 # }
 
+data "aws_vpc" "default" {
+  default = true
+}
+
+data "aws_availability_zones" "this" {}
+
+data "aws_subnets" "this" {
+  count = length(data.aws_availability_zones.this.names)
+
+  filter {
+    name   = "availability-zone"
+    values = [data.aws_availability_zones.this.names[count.index]]
+  }
+
+  filter {
+    name   = "vpc-id"
+    values = [local.vpc_id]
+  }
+
+  filter {
+    name   = "state"
+    values = ["available"]
+  }
+}
+
 locals {
-  cluster_addons = try(var.cluster_addons, {
-    coredns = {
-      most_recent = true
-      configuration_values = jsonencode({
-        nodeSelector = {
-          "kubernetes.io/os" = "linux"
-          "node.kubernetes.io/purpose" = "management"
-        }
-      })
-    }
-    kube-proxy = {
-      most_recent = true
-      configuration_values = jsonencode({
-        nodeSelector = {
-          "kubernetes.io/os" = "linux"
-          "node.kubernetes.io/purpose" = "management"
-        }
-      })
-    }
-    vpc-cni = {
-      most_recent = true
-      configuration_values = jsonencode({
-        nodeSelector = {
-          "kubernetes.io/os" = "linux"
-          "node.kubernetes.io/purpose" = "management"
-        }
-      })
-    }
-    aws-ebs-csi-driver = {
-      most_recent = true
-      configuration_values = jsonencode({
-        nodeSelector = {
-          "kubernetes.io/os" = "linux"
-          "node.kubernetes.io/purpose" = "management"
-        }
-      })
-    }
-    snapshot-controller = {
-      most_recent = true
-      configuration_values = jsonencode({
-        nodeSelector = {
-          "kubernetes.io/os" = "linux"
-          "node.kubernetes.io/purpose" = "management"
-        }
-      })
-    }
-  })
+  vpc_id = coalesce(var.vpc_id, data.aws_vpc.default.id)
+
+  subnets_by_az = coalesce(
+    var.subnets_by_az,
+    [
+      for i, name in data.aws_availability_zones.this.names: {
+        zone    = name
+        subnets = data.aws_subnets.this[i].ids
+      }
+    ]
+  )
+
+  number_of_multi_az = min(var.number_of_multi_az, length(local.subnets_by_az))
+
+  # I don't think that we need more availability zones in node groups than in control plane
+  self_managed_node_group_number_of_multi_az = min(var.self_managed_node_group_number_of_multi_az, local.number_of_multi_az)
+  eks_managed_node_group_number_of_multi_az = min(var.eks_managed_node_group_number_of_multi_az, local.number_of_multi_az)
+  fargate_profile_number_of_multi_az = min(var.fargate_profile_number_of_multi_az, local.number_of_multi_az)
+
+  subnets = flatten([
+    for az in slice(local.subnets_by_az, 0, local.number_of_multi_az):
+      az.subnets
+  ])
+
+  # place for defaults
+  self_managed_node_group_templates_for_multi_az = merge(
+    {},
+    var.self_managed_node_group_templates_for_multi_az
+  )
+
+  self_managed_node_groups_multi_az_list = flatten([
+    for key, value in local.self_managed_node_group_templates_for_multi_az: [
+      for az in slice(local.subnets_by_az, 0, local.self_managed_node_group_number_of_multi_az): {
+        name       = "${key}_${az.zone}"
+        subnet_ids = az.subnets
+        merge_value = value
+      }
+    ]
+  ])
+
+  self_managed_node_groups_multi_az = {
+    for i in local.self_managed_node_groups_multi_az_list: i.name => merge(i.merge_value, i)
+  }
+
+  self_managed_node_groups = merge(local.self_managed_node_groups_multi_az, var.self_managed_node_groups)
+
+  # place for defaults
+  eks_managed_node_group_templates_for_multi_az = merge(
+    {},
+    var.eks_managed_node_group_templates_for_multi_az
+  )
+
+  eks_managed_node_groups_multi_az_list = flatten([
+    for key, value in local.eks_managed_node_group_templates_for_multi_az: [
+      for az in slice(local.subnets_by_az, 0, local.eks_managed_node_group_number_of_multi_az): {
+        name       = "${key}_${az.zone}"
+        subnet_ids = az.subnets
+        merge_value = value
+      }
+    ]
+  ])
+
+  eks_managed_node_groups_multi_az = {
+    for i in local.eks_managed_node_groups_multi_az_list: i.name => merge(i.merge_value, i)
+  }
+
+  eks_managed_node_groups = merge(local.eks_managed_node_groups_multi_az, var.eks_managed_node_groups)
+
+  # https://docs.aws.amazon.com/eks/latest/userguide/fargate-profile.html
+  # https://aws.amazon.com/ru/blogs/containers/monitoring-amazon-eks-on-aws-fargate-using-prometheus-and-grafana/
+  # https://docs.aws.amazon.com/eks/latest/userguide/monitoring-fargate-usage.html
+
+  # Amazon EKS and Fargate spread Pods across each of the subnets that's defined
+  # in the Fargate profile. However, you might end up with an uneven spread.
+  # If you must have an even spread, use two Fargate profiles. Even spread
+  # is important in scenarios where you want to deploy two replicas and don't
+  # want any downtime. We recommend that each profile has only one subnet.
+
+  fargate_profile_templates_for_multi_az = merge(
+    {
+      kube-system = {}
+      cert-manager = {}
+      external-dns = {}
+      external-secrets = {}
+      vpa = {}
+    },
+    var.fargate_profile_templates_for_multi_az
+  )
+
+  fargate_profiles_multi_az_list = flatten([
+    for key, value in local.fargate_profile_templates_for_multi_az: [
+      for az in slice(local.subnets_by_az, 0, local.fargate_profile_number_of_multi_az): {
+        name       = "${key}_${az.zone}"
+        subnet_ids = az.subnets
+        selectors = try(
+          value.selectors,
+          [{namespace = key}]
+        )
+        tags = merge(try(value.tags, {}), var.tags)
+        merge_value = value
+      }
+    ]
+  ])
+
+  fargate_profiles_multi_az = {
+    for i in local.fargate_profiles_multi_az_list: i.name => merge(i.merge_value, i)
+  }
+
+  fargate_profiles = merge(local.fargate_profiles_multi_az, var.fargate_profiles)
+
+  universal_cluster_addon_config = {
+    most_recent = true
+    configuration_values = jsonencode({
+      nodeSelector = {
+        "kubernetes.io/os" = "linux"
+        "node.kubernetes.io/purpose" = "management"
+      }
+    })
+  }
+
+  cluster_addons = merge(
+    {
+      coredns = local.universal_cluster_addon_config
+      kube-proxy = local.universal_cluster_addon_config
+      vpc-cni = local.universal_cluster_addon_config
+      aws-ebs-csi-driver = local.universal_cluster_addon_config
+      snapshot-controller = local.universal_cluster_addon_config
+    },
+    var.cluster_addons
+  )
 
   universal_addon_config = {
     values = [templatefile("${path.module}/universal_values.yaml", {})]
   }
-  aws_efs_csi_driver_config = try(var.aws_efs_csi_driver_config, local.universal_addon_config)
-  aws_node_termination_handler_config = try(var.aws_node_termination_handler_config, local.universal_addon_config)
-  cert_manager_config = try(var.cert_manager_config, local.universal_addon_config)
-  cluster_autoscaler_config = try(var.cluster_autoscaler_config, local.universal_addon_config)
-  metrics_server_config = try(var.metrics_server_config, local.universal_addon_config)
-  vpa_config = try(var.vpa_config, local.universal_addon_config)
+
+  aws_efs_csi_driver_config = merge(local.universal_addon_config, var.aws_efs_csi_driver_config)
+
+  aws_node_termination_handler_config = merge(local.universal_addon_config, var.aws_node_termination_handler_config)
+
+  cert_manager_config = merge(local.universal_addon_config, var.cert_manager_config)
+
+  cluster_autoscaler_config = merge(local.universal_addon_config, var.cluster_autoscaler_config)
+
+  metrics_server_config = merge(local.universal_addon_config, var.metrics_server_config)
+
+  vpa_config = merge(local.universal_addon_config, var.vpa_config)
+
 }
 
 module "eks" {
   source = "./modules/eks"
 
-  vpc_id = var.vpc_id
+  vpc_id = local.vpc_id
+  subnet_ids = local.subnets
   cluster_name = var.cluster_name
   cluster_version = var.cluster_version
-  # cluster_addons = var.cluster_addons
+  cluster_addons = {}
   self_managed_node_group_defaults = var.self_managed_node_group_defaults
   eks_managed_node_group_defaults = var.eks_managed_node_group_defaults
   fargate_profile_defaults = var.fargate_profile_defaults
   group_defaults = var.group_defaults
-  self_managed_node_groups = var.self_managed_node_groups
-  eks_managed_node_groups = var.eks_managed_node_groups
-  fargate_profiles = var.fargate_profiles
+  self_managed_node_groups = local.self_managed_node_groups
+  eks_managed_node_groups = local.eks_managed_node_groups
+  fargate_profiles = local.fargate_profiles
   admin_iam_roles = var.admin_iam_roles
   admin_iam_users = var.admin_iam_users
   eks_iam_roles = var.eks_iam_roles

@@ -10,6 +10,7 @@ Sugar for [terraform-aws-eks](https://github.com/terraform-aws-modules/terraform
 |Name|Description|Type|Required|
 |----|-----------|----|:------:|
 |vpc_id|ID of target VPC, 'default' will be used by default|string|no|
+|subnet_ids|List of networks for using for control plane and nodes|list(string)|no|
 |cluster_name|AWS EKS cluster name|string|yes|
 |cluster_version|AWS EKS cluster version|string|no|
 |cluster_addons|AWS EKS cluster addons map, default is latest coredns, kube-proxy, vpc-cni, aws-ebs-csi-driver, snapshot-controller|map(any)|no|

@@ -10,30 +10,6 @@ provider "kubernetes" {
   }
 }
 
-locals {
-  vpc_id = coalesce(var.vpc_id, data.aws_vpc.default.id)
-
-  self_managed_node_group_defaults = merge(var.self_managed_node_group_defaults, var.group_defaults)
-  eks_managed_node_group_defaults = merge(var.eks_managed_node_group_defaults, var.group_defaults)
-  fargate_profile_defaults = merge(var.fargate_profile_defaults, var.group_defaults)
-
-  aws_auth_users = [
-    for u in var.admin_iam_users : {
-      userarn  = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:user/${u}"
-      username = u
-      groups   = ["system:masters"]
-    }
-  ]
-
-  aws_auth_roles = [
-    for u in var.admin_iam_roles : {
-      userarn  = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${u}"
-      username = u
-      groups   = ["system:masters"]
-    }
-  ]
-}
-
 data "aws_region" "current" {}
 
 data "aws_caller_identity" "current" {}
@@ -51,6 +27,37 @@ data "aws_subnets" "vpc_subnets" {
     name   = "vpc-id"
     values = [local.vpc_id]
   }
+
+  filter {
+    name   = "state"
+    values = ["available"]
+  }
+}
+
+locals {
+  vpc_id = coalesce(var.vpc_id, data.aws_vpc.default.id)
+
+  subnet_ids = coalesce(var.subnet_ids, data.aws_subnets.vpc_subnets.ids)
+
+  self_managed_node_group_defaults = merge(var.group_defaults, var.self_managed_node_group_defaults)
+  eks_managed_node_group_defaults = merge(var.group_defaults, var.eks_managed_node_group_defaults)
+  fargate_profile_defaults = merge(var.group_defaults, var.fargate_profile_defaults)
+
+  aws_auth_users = [
+    for u in var.admin_iam_users : {
+      userarn  = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:user/${u}"
+      username = u
+      groups   = ["system:masters"]
+    }
+  ]
+
+  aws_auth_roles = [
+    for u in var.admin_iam_roles : {
+      userarn  = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${u}"
+      username = u
+      groups   = ["system:masters"]
+    }
+  ]
 }
 
 ################################################################################
@@ -73,7 +80,7 @@ module "eks" {
   cluster_addons = var.cluster_addons
 
   vpc_id                   = local.vpc_id
-  subnet_ids               = data.aws_subnets.vpc_subnets.ids
+  subnet_ids               = local.subnet_ids
   # control_plane_subnet_ids = data.aws_subnets.vpc_subnets.ids
 
   self_managed_node_group_defaults = local.self_managed_node_group_defaults

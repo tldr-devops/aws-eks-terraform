@@ -4,6 +4,12 @@ variable "vpc_id" {
   default     = ""
 }
 
+variable "subnet_ids" {
+  description = "List of networks for using for control plane and nodes"
+  type    = list(string)
+  default = null
+}
+
 variable "cluster_name" {
   description = "AWS EKS cluster name"
   type        = string
@@ -135,6 +141,6 @@ variable "eks_iam_roles" {
 
 variable "tags" {
   description = "Tags for EKS"
-  type        = any
+  type        = map(any)
   default     = { Terraform = "true" }
 }
