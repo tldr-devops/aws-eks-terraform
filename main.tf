@@ -44,7 +44,31 @@ data "aws_vpc" "default" {
 
 data "aws_availability_zones" "this" {}
 
-data "aws_subnets" "this" {
+data "aws_subnets" "private" {
+  count = length(data.aws_availability_zones.this.names)
+
+  filter {
+    name   = "availability-zone"
+    values = [data.aws_availability_zones.this.names[count.index]]
+  }
+
+  filter {
+    name   = "vpc-id"
+    values = [local.vpc_id]
+  }
+
+  filter {
+    name   = "map-public-ip-on-launch"
+    values = ["false"]
+  }
+
+  filter {
+    name   = "state"
+    values = ["available"]
+  }
+}
+
+data "aws_subnets" "available" {
   count = length(data.aws_availability_zones.this.names)
 
   filter {
@@ -66,22 +90,42 @@ data "aws_subnets" "this" {
 locals {
   vpc_id = coalesce(var.vpc_id, data.aws_vpc.default.id)
 
+  private_subnets_by_az = [
+    for i, name in data.aws_availability_zones.this.names: {
+      zone    = name
+      subnets = data.aws_subnets.private[i].ids
+    } if length(data.aws_subnets.private[i].ids) > 0
+  ]
+
+  available_subnets_by_az = [
+    for i, name in data.aws_availability_zones.this.names: {
+      zone    = name
+      subnets = data.aws_subnets.available[i].ids
+    } if length(data.aws_subnets.available[i].ids) > 0
+  ]
+
   subnets_by_az = coalesce(
     var.subnets_by_az,
-    [
-      for i, name in data.aws_availability_zones.this.names: {
-        zone    = name
-        subnets = data.aws_subnets.this[i].ids
-      }
-    ]
+    local.private_subnets_by_az,
+    local.available_subnets_by_az
   )
 
   number_of_multi_az = min(var.number_of_multi_az, length(local.subnets_by_az))
 
   # I don't think that we need more availability zones in node groups than in control plane
-  self_managed_node_group_number_of_multi_az = min(var.self_managed_node_group_number_of_multi_az, local.number_of_multi_az)
-  eks_managed_node_group_number_of_multi_az = min(var.eks_managed_node_group_number_of_multi_az, local.number_of_multi_az)
-  fargate_profile_number_of_multi_az = min(var.fargate_profile_number_of_multi_az, local.number_of_multi_az)
+  self_managed_node_group_number_of_multi_az = min(
+    var.self_managed_node_group_number_of_multi_az,
+    local.number_of_multi_az
+  )
+  eks_managed_node_group_number_of_multi_az = min(
+    var.eks_managed_node_group_number_of_multi_az,
+    local.number_of_multi_az
+  )
+  fargate_profile_number_of_multi_az = min(
+    var.fargate_profile_number_of_multi_az,
+    local.number_of_multi_az,
+    local.private_subnets_by_az # fargate works only in private subnets
+  )
 
   subnets = flatten([
     for az in slice(local.subnets_by_az, 0, local.number_of_multi_az):
