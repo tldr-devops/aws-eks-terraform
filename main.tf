@@ -58,13 +58,16 @@ data "aws_subnets" "private" {
   }
 
   filter {
-    name   = "map-public-ip-on-launch"
-    values = ["false"]
-  }
-
-  filter {
     name   = "state"
     values = ["available"]
+  }
+
+  dynamic "filter" {
+    for_each = var.private_subnets_filters
+    content {
+      name   = filter.value.name
+      values = filter.value.values
+    }
   }
 }
 
@@ -104,7 +107,7 @@ locals {
     } if length(data.aws_subnets.available[i].ids) > 0
   ]
 
-  subnets_by_az = coalesce(
+  subnets_by_az = coalescelist(
     var.subnets_by_az,
     local.private_subnets_by_az,
     local.available_subnets_by_az
@@ -124,7 +127,7 @@ locals {
   fargate_profile_number_of_multi_az = min(
     var.fargate_profile_number_of_multi_az,
     local.number_of_multi_az,
-    local.private_subnets_by_az # fargate works only in private subnets
+    length(local.private_subnets_by_az) # fargate works only in private subnets
   )
 
   subnets = flatten([
@@ -140,16 +143,19 @@ locals {
 
   self_managed_node_groups_multi_az_list = flatten([
     for key, value in local.self_managed_node_group_templates_for_multi_az: [
-      for az in slice(local.subnets_by_az, 0, local.self_managed_node_group_number_of_multi_az): {
-        name       = "${key}_${az.zone}"
-        subnet_ids = az.subnets
-        merge_value = value
-      }
+      for az in slice(local.subnets_by_az, 0, local.self_managed_node_group_number_of_multi_az): merge(
+        value,
+        {
+          key         = key
+          name        = "${key}_${az.zone}"
+          subnet_ids  = az.subnets
+        }
+      )
     ]
   ])
 
   self_managed_node_groups_multi_az = {
-    for i in local.self_managed_node_groups_multi_az_list: i.name => merge(i.merge_value, i)
+    for i in local.self_managed_node_groups_multi_az_list: i.name => i
   }
 
   self_managed_node_groups = merge(local.self_managed_node_groups_multi_az, var.self_managed_node_groups)
@@ -162,16 +168,19 @@ locals {
 
   eks_managed_node_groups_multi_az_list = flatten([
     for key, value in local.eks_managed_node_group_templates_for_multi_az: [
-      for az in slice(local.subnets_by_az, 0, local.eks_managed_node_group_number_of_multi_az): {
-        name       = "${key}_${az.zone}"
-        subnet_ids = az.subnets
-        merge_value = value
-      }
+      for az in slice(local.subnets_by_az, 0, local.eks_managed_node_group_number_of_multi_az): merge(
+        value,
+        {
+          key         = key
+          name        = "${key}_${az.zone}"
+          subnet_ids  = az.subnets
+        }
+      )
     ]
   ])
 
   eks_managed_node_groups_multi_az = {
-    for i in local.eks_managed_node_groups_multi_az_list: i.name => merge(i.merge_value, i)
+    for i in local.eks_managed_node_groups_multi_az_list: i.name => i
   }
 
   eks_managed_node_groups = merge(local.eks_managed_node_groups_multi_az, var.eks_managed_node_groups)
@@ -187,33 +196,45 @@ locals {
   # want any downtime. We recommend that each profile has only one subnet.
 
   fargate_profile_templates_for_multi_az = merge(
-    {
-      kube-system = {}
-      cert-manager = {}
-      external-dns = {}
-      external-secrets = {}
-      vpa = {}
-    },
+# disable this as coredns and some other addons
+# had untolerated taint {eks.amazonaws.com/compute-type: fargate}.
+# and also EKS has quote for 10 fargate profiles by default.
+# and also all fargate instances was started in one AZ instead of splitting by AZs
+#     {
+#       # default = {}
+#       kube-system = {}
+#       kube-node-lease = {}
+#       kube-public = {}
+#       cert-manager = {}
+#       external-dns = {}
+#       external-secrets = {}
+#       vpa = {}
+#       aws-node-termination-handler = {}
+#     },
+    {},
     var.fargate_profile_templates_for_multi_az
   )
 
   fargate_profiles_multi_az_list = flatten([
     for key, value in local.fargate_profile_templates_for_multi_az: [
-      for az in slice(local.subnets_by_az, 0, local.fargate_profile_number_of_multi_az): {
-        name       = "${key}_${az.zone}"
-        subnet_ids = az.subnets
-        selectors = try(
-          value.selectors,
-          [{namespace = key}]
-        )
-        tags = merge(try(value.tags, {}), var.tags)
-        merge_value = value
-      }
+      for az in slice(local.subnets_by_az, 0, local.fargate_profile_number_of_multi_az): merge(
+        value,
+        {
+          key         = key
+          name        = "${key}_${az.zone}"
+          subnet_ids  = az.subnets
+          selectors   = try(
+            value.selectors,
+            [{namespace = key}]
+          )
+          tags        = merge(try(value.tags, {}), var.tags)
+        }
+      )
     ]
   ])
 
   fargate_profiles_multi_az = {
-    for i in local.fargate_profiles_multi_az_list: i.name => merge(i.merge_value, i)
+    for i in local.fargate_profiles_multi_az_list: i.name => i
   }
 
   fargate_profiles = merge(local.fargate_profiles_multi_az, var.fargate_profiles)
@@ -231,10 +252,10 @@ locals {
   cluster_addons = merge(
     {
       coredns = local.universal_cluster_addon_config
-      kube-proxy = local.universal_cluster_addon_config
       vpc-cni = local.universal_cluster_addon_config
       aws-ebs-csi-driver = local.universal_cluster_addon_config
       snapshot-controller = local.universal_cluster_addon_config
+      # kube-proxy = local.universal_cluster_addon_config # disable nodeSelector for it
     },
     var.cluster_addons
   )
@@ -256,6 +277,7 @@ locals {
   vpa_config = merge(local.universal_addon_config, var.vpa_config)
 
 }
+
 
 module "eks" {
   source = "./modules/eks"

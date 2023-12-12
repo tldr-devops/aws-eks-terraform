@@ -13,6 +13,20 @@ variable "subnets_by_az" {
   default     = null
 }
 
+variable "private_subnets_filters" {
+  description = "List of filters for private subnets data source"
+  type        = list(object({
+    name   = string
+    values = list(string)
+  }))
+  default     = [
+    {
+      name   = "map-public-ip-on-launch"
+      values = ["false"]
+    }
+  ]
+}
+
 variable "number_of_multi_az" {
   description = "How many availability zones should be used for running control plane and nodes"
   type        = number

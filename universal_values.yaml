@@ -6,3 +6,7 @@ tolerations:
   operator: Equal
   value: management
   effect: NoSchedule
+- key: eks.amazonaws.com/compute-type
+  operator: Equal
+  value: fargate
+  effect: NoSchedule
