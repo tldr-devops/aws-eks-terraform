@@ -252,9 +252,9 @@ locals {
   cluster_addons = merge(
     {
       coredns = local.universal_cluster_addon_config
-      vpc-cni = local.universal_cluster_addon_config
-      aws-ebs-csi-driver = local.universal_cluster_addon_config
-      snapshot-controller = local.universal_cluster_addon_config
+      # vpc-cni = local.universal_cluster_addon_config # nodeSelector not supported
+      # aws-ebs-csi-driver = local.universal_cluster_addon_config # nodeSelector not supported
+      # snapshot-controller = local.universal_cluster_addon_config # nodeSelector not supported
       # kube-proxy = local.universal_cluster_addon_config # disable nodeSelector for it
     },
     var.cluster_addons
@@ -266,7 +266,7 @@ locals {
 
   aws_efs_csi_driver_config = merge(local.universal_addon_config, var.aws_efs_csi_driver_config)
 
-  aws_node_termination_handler_config = merge(local.universal_addon_config, var.aws_node_termination_handler_config)
+  # aws_node_termination_handler_config = merge(local.universal_addon_config, var.aws_node_termination_handler_config)
 
   cert_manager_config = merge(local.universal_addon_config, var.cert_manager_config)
 
@@ -315,8 +315,8 @@ module "addons" {
   aws_efs_csi_driver = local.aws_efs_csi_driver_config
 
   # https://github.com/aws-ia/terraform-aws-eks-blueprints-addons/blob/0e9d6c9b7115ecf0404c377c9c2529bffa56d10d/docs/addons/aws-node-termination-handler.md
-  enable_aws_node_termination_handler = var.enable_aws_node_termination_handler
-  aws_node_termination_handler = local.aws_node_termination_handler_config
+  #enable_aws_node_termination_handler = var.enable_aws_node_termination_handler
+  #aws_node_termination_handler = local.aws_node_termination_handler_config
 
   # https://github.com/aws-ia/terraform-aws-eks-blueprints-addons/blob/0e9d6c9b7115ecf0404c377c9c2529bffa56d10d/docs/addons/cert-manager.md
   enable_cert_manager = var.enable_cert_manager

@@ -36,13 +36,13 @@ locals {
         "node.kubernetes.io/purpose" = "management"
       }
 
-      taints = {
-        purpose = {
-          key    = "node.kubernetes.io/purpose"
-          value  = "management"
-          effect = "NO_SCHEDULE"
-        }
-      }
+#       taints = {
+#         purpose = {
+#           key    = "node.kubernetes.io/purpose"
+#           value  = "management"
+#           effect = "NO_SCHEDULE"
+#         }
+#       }
     }
   }
 

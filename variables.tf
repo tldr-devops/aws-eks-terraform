@@ -201,17 +201,17 @@ variable "aws_efs_csi_driver_config" {
   default     = {}
 }
 
-variable "enable_aws_node_termination_handler" {
-  description = "Install latest AWS node termination handler"
-  type        = bool
-  default     = true
-}
-
-variable "aws_node_termination_handler_config" {
-  description = "AWS node termination handler configuration"
-  type        = any
-  default     = {}
-}
+# variable "enable_aws_node_termination_handler" {
+#   description = "Install latest AWS node termination handler"
+#   type        = bool
+#   default     = true
+# }
+# 
+# variable "aws_node_termination_handler_config" {
+#   description = "AWS node termination handler configuration"
+#   type        = any
+#   default     = {}
+# }
 
 variable "enable_cert_manager" {
   description = "Install latest cert-manager"
