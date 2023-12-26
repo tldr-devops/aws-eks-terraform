@@ -260,3 +260,21 @@ variable "vpa_config" {
   type        = any
   default     = {}
 }
+
+variable "enable_ingress_apisix" {
+  description = "Install latest ingress Apisix"
+  type        = bool
+  default     = true
+}
+
+variable "ingress_apisix_chart_version" {
+  description = "Ingress Apisix chart version"
+  type        = string
+  default     = null
+}
+
+variable "ingress_apisix_namespace" {
+  description = "Ingress Apisix namespace"
+  type        = string
+  default     = "ingress-apisix"
+}

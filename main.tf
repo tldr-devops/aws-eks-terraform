@@ -302,6 +302,7 @@ module "eks" {
 
 module "addons" {
   source = "aws-ia/eks-blueprints-addons/aws"
+  version = "~> 1.1"
 
   cluster_name      = module.eks.cluster_name
   cluster_endpoint  = module.eks.cluster_endpoint
@@ -337,6 +338,22 @@ module "addons" {
   tags = var.tags
 }
 
-# ingress
+# INGRESS APISIX
+
+module "ingress_apisix" {
+  source = "./modules/apisix"
+
+  create        = var.enable_ingress_apisix
+  chart_version = var.ingress_apisix_chart_version ? var.ingress_apisix_chart_version : null
+  namespace     = var.ingress_apisix_namespace
+  tags          = var.tags
+
+  values = [
+    templatefile("${path.module}/universal_values.yaml", {})
+  ]
+}
+
 # metrics
+
+
 # logs
