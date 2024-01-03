@@ -18,6 +18,10 @@ module "ingress_apisix" {
   set = concat(
     [
       {
+        name  = "config.etcdserver.enabled"
+        value = "true"
+      },
+      {
         name  = "gateway.type"
         value = "LoadBalancer"
       },
@@ -27,7 +31,7 @@ module "ingress_apisix" {
       },
       {
         name  = "ingress-controller.config.apisix.serviceNamespace"
-        value = var.ingress_apisix_namespace
+        value = var.namespace
       },
       {
         name  = "ingress-controller.config.apisix.adminAPIVersion"
@@ -38,7 +42,7 @@ module "ingress_apisix" {
         value = "true"
       },
       {
-        name  = "gateway.annotations.\"service\.beta\.kubernetes\.io/aws-load-balancer-type\""
+        name  = "gateway.annotations.service\\.beta\\.kubernetes\\.io/aws-load-balancer-type"
         value = "nlb"
       },
       {

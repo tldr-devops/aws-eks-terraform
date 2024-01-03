@@ -344,7 +344,7 @@ module "ingress_apisix" {
   source = "./modules/apisix"
 
   create        = var.enable_ingress_apisix
-  chart_version = var.ingress_apisix_chart_version ? var.ingress_apisix_chart_version : null
+  chart_version = can(var.ingress_apisix_chart_version) ? var.ingress_apisix_chart_version : null
   namespace     = var.ingress_apisix_namespace
   tags          = var.tags
 
