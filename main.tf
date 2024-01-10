@@ -252,10 +252,20 @@ locals {
   cluster_addons = merge(
     {
       coredns = local.universal_cluster_addon_config
-      # vpc-cni = local.universal_cluster_addon_config # nodeSelector not supported
-      # aws-ebs-csi-driver = local.universal_cluster_addon_config # nodeSelector not supported
-      # snapshot-controller = local.universal_cluster_addon_config # nodeSelector not supported
-      # kube-proxy = local.universal_cluster_addon_config # disable nodeSelector for it
+      kube-proxy = {
+        most_recent = true
+      }
+      vpc-cni = {
+        most_recent = true
+        service_account_role_arn = module.vpc_cni_irsa.iam_role_arn
+      }
+      aws-ebs-csi-driver = {
+        most_recent = true
+        service_account_role_arn = module.ebs_csi_driver_irsa.iam_role_arn
+      }
+      snapshot-controller = {
+        most_recent = true
+      }
     },
     var.cluster_addons
   )
@@ -297,6 +307,43 @@ module "eks" {
   admin_iam_roles = var.admin_iam_roles
   admin_iam_users = var.admin_iam_users
   eks_iam_roles = var.eks_iam_roles
+  tags = var.tags
+}
+
+module "ebs_csi_driver_irsa" {
+  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+  version = "~> 5.20"
+
+  role_name_prefix = "${var.cluster_name}-ebs-csi-driver-"
+
+  attach_ebs_csi_policy = true
+
+  oidc_providers = {
+    main = {
+      provider_arn               = module.eks.oidc_provider_arn
+      namespace_service_accounts = ["kube-system:ebs-csi-controller-sa"]
+    }
+  }
+
+  tags = var.tags
+}
+
+module "vpc_cni_irsa" {
+  source    = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+  version = "~> 5.20"
+
+  role_name_prefix = "${var.cluster_name}-vpc-cni-"
+
+  attach_vpc_cni_policy = true
+  vpc_cni_enable_ipv4   = true
+
+  oidc_providers = {
+    main = {
+      provider_arn               = module.eks.oidc_provider_arn
+      namespace_service_accounts = ["kube-system:aws-node"]
+    }
+  }
+
   tags = var.tags
 }
 
