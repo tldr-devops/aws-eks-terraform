@@ -400,7 +400,22 @@ module "ingress_apisix" {
   ]
 }
 
-# metrics
+# MONITORING
 
+module "openobserve" {
+  source = "./modules/openobserve"
 
-# logs
+  create        = var.enable_openobserve
+  chart         = var.openobserve_chart_name
+  chart_version = can(var.openobserve_chart_version) ? var.openobserve_chart_version : null
+  namespace     = var.openobserve_namespace
+  tags          = var.tags
+
+  zo_root_user_email = var.admin_email
+  cluster_name       = var.cluster_name
+  oidc_provider_arn  = module.eks.cluster_oidc_issuer_url
+
+  values = [
+    templatefile("${path.module}/universal_values.yaml", {})
+  ]
+}

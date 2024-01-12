@@ -4,6 +4,7 @@ provider "aws" {
 
 locals {
   cluster_name = "test"
+  admin_email  = "test@test.com"
 
   vpc_name = "eks_${local.cluster_name}"
   azs = data.aws_availability_zones.available.names
@@ -125,8 +126,9 @@ module "vpc" {
 module "eks" {
   source = "../"
 
-  vpc_id                                          = module.vpc.vpc_id
   cluster_name                                    = local.cluster_name
+  admin_email                                     = local.admin_email
+  vpc_id                                          = module.vpc.vpc_id
   number_of_multi_az                              = local.number_of_multi_az
   self_managed_node_group_number_of_multi_az      = local.self_managed_node_group_number_of_multi_az
   eks_managed_node_group_number_of_multi_az       = local.eks_managed_node_group_number_of_multi_az

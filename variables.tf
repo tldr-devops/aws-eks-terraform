@@ -1,3 +1,9 @@
+variable "admin_email" {
+  description = "Email of cluster administrator"
+  type        = string
+  default     = null
+}
+
 variable "vpc_id" {
   description = "ID of target VPC, 'default' will be used by default"
   type        = string
@@ -262,7 +268,7 @@ variable "vpa_config" {
 }
 
 variable "enable_ingress_apisix" {
-  description = "Install latest ingress Apisix"
+  description = "Install ingress Apisix"
   type        = bool
   default     = true
 }
@@ -277,4 +283,28 @@ variable "ingress_apisix_namespace" {
   description = "Ingress Apisix namespace"
   type        = string
   default     = "ingress-apisix"
+}
+
+variable "enable_openobserve" {
+  description = "Install Openobserve"
+  type        = bool
+  default     = true
+}
+
+variable "openobserve_chart_version" {
+  description = "Openobserve chart version"
+  type        = string
+  default     = null
+}
+
+variable "openobserve_chart_name" {
+  description = "Openobserve chart name like openobserve-standalone or openobserve"
+  type        = string
+  default     = "openobserve-standalone"
+}
+
+variable "openobserve_namespace" {
+  description = "Openobserve namespace"
+  type        = string
+  default     = "openobserve"
 }
