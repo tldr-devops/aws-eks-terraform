@@ -321,14 +321,8 @@ variable "openobserve_collector_chart_version" {
   default     = null
 }
 
-variable "openobserve_collector_chart_name" {
-  description = "Openobserve Collector chart name"
-  type        = string
-  default     = "openobserve-collector"
-}
-
 variable "openobserve_collector_namespace" {
   description = "Openobserve Collector namespace"
   type        = string
-  default     = "openobserve"
+  default     = "openobserve-collector"
 }

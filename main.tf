@@ -286,6 +286,9 @@ locals {
 
   vpa_config = merge(local.universal_addon_config, var.vpa_config)
 
+  # don't like it but for speedup
+  openobserve_authorization = base64encode("${var.admin_email}:${random_password.openobserve_root_password.result}")
+
 }
 
 
@@ -419,6 +422,22 @@ module "openobserve" {
   zo_root_user_email    = var.admin_email
   zo_root_user_password = random_password.openobserve_root_password.result
   oidc_provider_arn     = module.eks.cluster_oidc_issuer_url
+
+  values = [
+    templatefile("${path.module}/universal_values.yaml", {})
+  ]
+}
+
+module "openobserve-collector" {
+  source = "./modules/openobserve"
+
+  create        = var.enable_openobserve_collector
+  chart_version = var.openobserve_collector_chart_version
+  namespace     = var.openobserve_collector_namespace
+  tags          = var.tags
+
+  zo_endpoint      = "https://api.openobserve.ai/api/default/"
+  zo_authorization = "Basic ${local.openobserve_authorization}"
 
   values = [
     templatefile("${path.module}/universal_values.yaml", {})

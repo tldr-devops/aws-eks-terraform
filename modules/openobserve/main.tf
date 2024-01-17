@@ -153,10 +153,7 @@ module "openobserve" {
     var.oidc_providers
   )
 
-  set = concat(
-    local.set,
-    var.set
-  )
+  set = var.set
 
   values = concat(
     local.values,
