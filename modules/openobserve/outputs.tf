@@ -75,6 +75,10 @@ output "iam_policy" {
   value       = try(module.openobserve.iam_policy, null)
 }
 
+################################################################################
+# OpenObserve
+################################################################################
+
 output "zo_root_user_password" {
   description = "The openobserve root password"
   value       = local.zo_root_user_password

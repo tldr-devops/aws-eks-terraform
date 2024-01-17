@@ -308,3 +308,27 @@ variable "openobserve_namespace" {
   type        = string
   default     = "openobserve"
 }
+
+variable "enable_openobserve_collector" {
+  description = "Install Openobserve Collector"
+  type        = bool
+  default     = true
+}
+
+variable "openobserve_collector_chart_version" {
+  description = "Openobserve Collector chart version"
+  type        = string
+  default     = null
+}
+
+variable "openobserve_collector_chart_name" {
+  description = "Openobserve Collector chart name"
+  type        = string
+  default     = "openobserve-collector"
+}
+
+variable "openobserve_collector_namespace" {
+  description = "Openobserve Collector namespace"
+  type        = string
+  default     = "openobserve"
+}

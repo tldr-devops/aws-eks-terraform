@@ -20,11 +20,6 @@ variable "tags" {
   default     = {}
 }
 
-variable "cluster_name" {
-  description = "AWS EKS cluster name"
-  type        = string
-}
-
 ################################################################################
 # Helm Release
 ################################################################################

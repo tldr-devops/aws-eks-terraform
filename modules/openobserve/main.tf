@@ -1,7 +1,7 @@
 data "aws_region" "current" {}
 
 locals {
-  zo_root_user_password = try(var.zo_root_user_password, random_password.apisix_admin_key.result)
+  zo_root_user_password = try(var.zo_root_user_password, random_password.openobserve_root_password.result)
 
   # https://openobserve.ai/docs/environment-variables/
   values = [

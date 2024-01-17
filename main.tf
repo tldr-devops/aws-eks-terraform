@@ -402,18 +402,23 @@ module "ingress_apisix" {
 
 # MONITORING
 
+resource "random_password" "openobserve_root_password" {
+  length           = 32
+  special          = true
+}
+
 module "openobserve" {
   source = "./modules/openobserve"
 
   create        = var.enable_openobserve
   chart         = var.openobserve_chart_name
-  chart_version = can(var.openobserve_chart_version) ? var.openobserve_chart_version : null
+  chart_version = var.openobserve_chart_version
   namespace     = var.openobserve_namespace
   tags          = var.tags
 
-  zo_root_user_email = var.admin_email
-  cluster_name       = var.cluster_name
-  oidc_provider_arn  = module.eks.cluster_oidc_issuer_url
+  zo_root_user_email    = var.admin_email
+  zo_root_user_password = random_password.openobserve_root_password.result
+  oidc_provider_arn     = module.eks.cluster_oidc_issuer_url
 
   values = [
     templatefile("${path.module}/universal_values.yaml", {})
