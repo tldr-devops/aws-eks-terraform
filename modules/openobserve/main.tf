@@ -12,14 +12,19 @@ locals {
       serviceAccount:
         create: true
         name: "openobserve"
+        annotations:
+          eks.amazonaws.com/role-arn: ${module.role.iam_role_arn}
       config:
         ZO_LOCAL_MODE_STORAGE: "s3"
-        ZO_META_STORE: "dynamodb"
-        ZO_TELEMETRY: false
-        ZO_PROMETHEUS_ENABLED: true
+        # ZO_META_STORE: "dynamodb"
+        ZO_META_DYNAMO_PREFIX: ${aws_s3_bucket.openobserve.id}
+        ZO_TELEMETRY: "false"
+        ZO_PROMETHEUS_ENABLED: "true"
         ZO_S3_REGION_NAME: ${data.aws_region.current.name}
         ZO_S3_BUCKET_NAME: ${aws_s3_bucket.openobserve.id}
         ZO_S3_PROVIDER: "aws"
+        # RUST_LOG: "debug"
+        # RUST_BACKTRACE: "full"
     EOT
   ]
   set = []
@@ -69,12 +74,6 @@ resource "aws_s3_bucket_public_access_block" "openobserve" {
   restrict_public_buckets = true
 }
 
-resource "aws_dynamodb_table" "openobserve" {
-  name         = aws_s3_bucket.openobserve.id
-  billing_mode = "PAY_PER_REQUEST"
-
-}
-
 resource "aws_iam_policy" "openobserve" {
   name        = aws_s3_bucket.openobserve.id
   path        = "/"
@@ -101,43 +100,45 @@ resource "aws_iam_policy" "openobserve" {
       {
         Effect = "Allow",
         Action = [
-          "s3:GetObject",
-          "s3:PutObject",
-          "s3:DeleteObject"
+          "s3:*"
         ],
         Resource = [
-          "aws_s3_bucket.openobserve.arn/*"
+          "${aws_s3_bucket.openobserve.arn}/*",
+          "${aws_s3_bucket.openobserve.arn}"
         ]
       },
       {
         Effect = "Allow",
         Action = [
-          "dynamodb:Scan",
-          "dynamodb:Query",
-          "dynamodb:GetItem",
-          "dynamodb:PutItem",
-          "dynamodb:UpdateItem",
-          "dynamodb:DeleteItem"
+          "dynamodb:*"
         ],
-        Resource = [
-          "aws_dynamodb_table.openobserve.arn"
-        ]
-      }
+        Resource = "arn:aws:dynamodb:*:*:table/${aws_s3_bucket.openobserve.id}*"
+      },
+      {
+        Effect = "Allow",
+        Action = [
+          "dynamodb:ListTables"
+        ],
+        Resource = "arn:aws:dynamodb:*:*:table*"
+      },
     ]
   })
 }
 
-module "openobserve" {
+module "role" {
   source = "aws-ia/eks-blueprints-addon/aws"
   version = "~> 1.1"
+
+  # Disable helm release
+  create_release = false
 
  # IAM role for service account (IRSA)
   create_role = true
   create_policy = false
-  role_name   = aws_s3_bucket.openobserve.id
+  role_name   = "openobserve"
   role_policies = merge(
     {
-      aws_s3_bucket.openobserve.id = aws_iam_policy.openobserve.arn
+      openobserve = aws_iam_policy.openobserve.arn
     },
     var.role_policies
   )
@@ -152,6 +153,14 @@ module "openobserve" {
     },
     var.oidc_providers
   )
+
+  create = var.create
+  tags = var.tags
+}
+
+module "openobserve" {
+  source = "aws-ia/eks-blueprints-addon/aws"
+  version = "~> 1.1"
 
   set = var.set
 
@@ -201,8 +210,6 @@ module "openobserve" {
   role_path = var.role_path
   role_permissions_boundary_arn = var.role_permissions_boundary_arn
   role_description = var.role_description
-  role_policies = var.role_policies
-  oidc_providers = var.oidc_providers
   max_session_duration = var.max_session_duration
   assume_role_condition_test = var.assume_role_condition_test
   allow_self_assume_role = var.allow_self_assume_role

@@ -405,6 +405,8 @@ module "ingress_apisix" {
 
 # MONITORING
 
+# https://signoz.io/ vs https://openobserve.ai/ ?
+
 resource "random_password" "openobserve_root_password" {
   length           = 32
   special          = true
@@ -421,22 +423,39 @@ module "openobserve" {
 
   zo_root_user_email    = var.admin_email
   zo_root_user_password = random_password.openobserve_root_password.result
-  oidc_provider_arn     = module.eks.cluster_oidc_issuer_url
+  oidc_provider_arn     = module.eks.oidc_provider_arn
 
   values = [
     templatefile("${path.module}/universal_values.yaml", {})
   ]
 }
 
-module "openobserve-collector" {
-  source = "./modules/openobserve"
+module "opentelemetry_operator" {
+  source = "./modules/opentelemetry-operator"
+
+  create        = var.enable_opentelemetry_operator
+  chart_version = var.opentelemetry_operator_chart_version
+  namespace     = var.opentelemetry_operator_namespace
+  tags          = var.tags
+
+  values = [
+    templatefile("${path.module}/universal_values.yaml", {})
+  ]
+}
+
+module "openobserve_collector" {
+  source = "./modules/openobserve-collector"
+
+  depends_on = [
+    module.opentelemetry_operator
+  ]
 
   create        = var.enable_openobserve_collector
   chart_version = var.openobserve_collector_chart_version
   namespace     = var.openobserve_collector_namespace
   tags          = var.tags
 
-  zo_endpoint      = "https://api.openobserve.ai/api/default/"
+  zo_endpoint      = "http://openobserve-standalone.${var.openobserve_namespace}.svc.cluster.local:5080/api/default/"
   zo_authorization = "Basic ${local.openobserve_authorization}"
 
   values = [

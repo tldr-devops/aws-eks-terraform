@@ -43,22 +43,22 @@ output "values" {
 
 output "iam_role_arn" {
   description = "ARN of IAM role"
-  value       = try(module.openobserve.iam_role_arn, null)
+  value       = try(module.role.iam_role_arn, null)
 }
 
 output "iam_role_name" {
   description = "Name of IAM role"
-  value       = try(module.openobserve.iam_role_name, null)
+  value       = try(module.role.iam_role_name, null)
 }
 
 output "iam_role_path" {
   description = "Path of IAM role"
-  value       = try(module.openobserve.iam_role_name, null)
+  value       = try(module.role.iam_role_name, null)
 }
 
 output "iam_role_unique_id" {
   description = "Unique ID of IAM role"
-  value       = try(module.openobserve.iam_role_unique_id, null)
+  value       = try(module.role.iam_role_unique_id, null)
 }
 
 ################################################################################
@@ -67,12 +67,12 @@ output "iam_role_unique_id" {
 
 output "iam_policy_arn" {
   description = "The ARN assigned by AWS to this policy"
-  value       = try(module.openobserve.iam_policy_arn, null)
+  value       = try(module.role.iam_policy_arn, null)
 }
 
 output "iam_policy" {
   description = "The policy document"
-  value       = try(module.openobserve.iam_policy, null)
+  value       = try(module.role.iam_policy, null)
 }
 
 ################################################################################

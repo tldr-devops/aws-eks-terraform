@@ -309,6 +309,25 @@ variable "openobserve_namespace" {
   default     = "openobserve"
 }
 
+variable "enable_opentelemetry_operator" {
+  description = "Install Opentelemetry Operator"
+  type        = bool
+  default     = true
+}
+
+variable "opentelemetry_operator_chart_version" {
+  description = "Opentelemetry Operator chart version"
+  type        = string
+  default     = null
+}
+
+variable "opentelemetry_operator_namespace" {
+  description = "Opentelemetry Operator namespace"
+  type        = string
+  default     = "opentelemetry"
+}
+
+
 variable "enable_openobserve_collector" {
   description = "Install Openobserve Collector"
   type        = bool

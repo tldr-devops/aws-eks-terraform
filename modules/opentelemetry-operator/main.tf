@@ -1,33 +1,19 @@
-
-locals {
-
-  # https://github.com/openobserve/openobserve-helm-chart/blob/main/charts/openobserve-collector/values.yaml
-  values = [
-    <<-EOT
-      exporters:
-        otlphttp/openobserve:
-          endpoint: ${var.zo_endpoint}
-          headers:
-            Authorization: ${var.zo_authorization}
-        otlphttp/openobserve_k8s_events:
-          endpoint: ${var.zo_endpoint}
-          headers:
-            Authorization: ${var.zo_authorization}
-            stream-name: k8s_events
-    EOT
-  ]
-  set = []
-}
-
-module "openobserve-collector" {
+module "opentelemetry_operator" {
   source = "aws-ia/eks-blueprints-addon/aws"
   version = "~> 1.1"
 
-  set = var.set
-
-  values = concat(
-    local.values,
-    var.values
+  set = concat(
+    [
+      {
+        name  = "admissionWebhooks.certManager.enabled"
+        value = "false"
+      },
+      {
+        name  = "admissionWebhooks.certManager.autoGenerateCert.enabled"
+        value = "true"
+      },
+    ],
+    var.set
   )
 
   create = var.create
@@ -40,6 +26,7 @@ module "openobserve-collector" {
   chart = var.chart
   chart_version = var.chart_version
   repository = var.repository
+  values = var.values
   timeout = var.timeout
   repository_key_file = var.repository_key_file
   repository_cert_file = var.repository_cert_file

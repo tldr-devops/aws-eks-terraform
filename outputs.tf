@@ -97,3 +97,33 @@ output "openobserve_admin_password" {
   description = "The openobserve admin password"
   value       = try(module.openobserve.zo_root_user_password, null)
 }
+
+output "openobserve_collector_chart" {
+  description = "The name of the openobserve collector chart"
+  value       = try(module.openobserve_collector.chart, null)
+}
+
+output "openobserve_collector_name" {
+  description = "Name is the name of the openobserve collector release"
+  value       = try(module.openobserve_collector.name, null)
+}
+
+output "openobserve_collector_namespace" {
+  description = "Name of openobserve collector namespace"
+  value       = try(module.openobserve_collector.namespace, null)
+}
+
+output "openobserve_collector_revision" {
+  description = "Version is an int32 which represents the version of the openobserve collector release"
+  value       = try(module.openobserve_collector.revision, null)
+}
+
+output "openobserve_collector_version" {
+  description = "A SemVer 2 conformant version string of the openobserve collector chart"
+  value       = try(module.openobserve_collector.version, null)
+}
+
+output "openobserve_collector_app_version" {
+  description = "The version number of the openobserve collector being deployed"
+  value       = try(module.openobserve_collector.app_version, null)
+}
