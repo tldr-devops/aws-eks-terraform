@@ -285,6 +285,36 @@ variable "ingress_apisix_namespace" {
   default     = "ingress-apisix"
 }
 
+variable "enable_opentelemetry_operator" {
+  description = "Install Opentelemetry Operator"
+  type        = bool
+  default     = true
+}
+
+variable "opentelemetry_operator_chart_version" {
+  description = "Opentelemetry Operator chart version"
+  type        = string
+  default     = null
+}
+
+variable "opentelemetry_operator_namespace" {
+  description = "Opentelemetry Operator namespace"
+  type        = string
+  default     = "opentelemetry"
+}
+
+variable "opentelemetry_operator_set" {
+  description = "Opentelemetry Operator helm value block with custom values to be merged with the values yaml"
+  type        = any
+  default     = []
+}
+
+variable "opentelemetry_operator_values" {
+  description = "Opentelemetry Operator list of values in raw yaml to pass to helm. Values will be merged, in order, as Helm does with multiple `-f` options"
+  type        = list(string)
+  default     = [""]
+}
+
 variable "enable_openobserve" {
   description = "Install Openobserve"
   type        = bool
@@ -309,24 +339,17 @@ variable "openobserve_namespace" {
   default     = "openobserve"
 }
 
-variable "enable_opentelemetry_operator" {
-  description = "Install Opentelemetry Operator"
-  type        = bool
-  default     = true
+variable "openobserve_set" {
+  description = "Openobserve helm value block with custom values to be merged with the values yaml"
+  type        = any
+  default     = []
 }
 
-variable "opentelemetry_operator_chart_version" {
-  description = "Opentelemetry Operator chart version"
-  type        = string
-  default     = null
+variable "openobserve_values" {
+  description = "Openobserve list of values in raw yaml to pass to helm. Values will be merged, in order, as Helm does with multiple `-f` options"
+  type        = list(string)
+  default     = [""]
 }
-
-variable "opentelemetry_operator_namespace" {
-  description = "Opentelemetry Operator namespace"
-  type        = string
-  default     = "opentelemetry"
-}
-
 
 variable "enable_openobserve_collector" {
   description = "Install Openobserve Collector"
@@ -344,4 +367,46 @@ variable "openobserve_collector_namespace" {
   description = "Openobserve Collector namespace"
   type        = string
   default     = "openobserve-collector"
+}
+
+variable "openobserve_collector_set" {
+  description = "Openobserve Collector helm value block with custom values to be merged with the values yaml"
+  type        = any
+  default     = []
+}
+
+variable "openobserve_collector_values" {
+  description = "Openobserve Collector list of values in raw yaml to pass to helm. Values will be merged, in order, as Helm does with multiple `-f` options"
+  type        = list(string)
+  default     = [""]
+}
+
+variable "enable_kubernetes_dashboard" {
+  description = "Install Kubernetes Dashboard"
+  type        = bool
+  default     = true
+}
+
+variable "kubernetes_dashboard_chart_version" {
+  description = "Kubernetes Dashboard chart version"
+  type        = string
+  default     = null
+}
+
+variable "kubernetes_dashboard_namespace" {
+  description = "Kubernetes Dashboard namespace"
+  type        = string
+  default     = "kubernetes-dashboard"
+}
+
+variable "kubernetes_dashboard_set" {
+  description = "Kubernetes Dashboard helm value block with custom values to be merged with the values yaml"
+  type        = any
+  default     = []
+}
+
+variable "kubernetes_dashboard_values" {
+  description = "Kubernetes Dashboard list of values in raw yaml to pass to helm. Values will be merged, in order, as Helm does with multiple `-f` options"
+  type        = list(string)
+  default     = [""]
 }

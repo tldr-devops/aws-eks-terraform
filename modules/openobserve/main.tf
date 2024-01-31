@@ -16,6 +16,7 @@ locals {
           eks.amazonaws.com/role-arn: ${module.role.iam_role_arn}
       config:
         ZO_LOCAL_MODE_STORAGE: "s3"
+        # https://github.com/openobserve/openobserve-helm-chart/issues/38
         # ZO_META_STORE: "dynamodb"
         ZO_META_DYNAMO_PREFIX: ${aws_s3_bucket.openobserve.id}
         ZO_TELEMETRY: "false"

@@ -79,3 +79,21 @@ output "openobserve_collector_version" {
 output "openobserve_collector_app_version" {
   value = module.eks.openobserve_collector_app_version
 }
+output "kubernetes_dashboard_chart" {
+  value = module.eks.kubernetes_dashboard_chart
+}
+output "kubernetes_dashboard_name" {
+  value = module.eks.kubernetes_dashboard_name
+}
+output "kubernetes_dashboard_namespace" {
+  value = module.eks.kubernetes_dashboard_namespace
+}
+output "kubernetes_dashboard_revision" {
+  value = module.eks.kubernetes_dashboard_revision
+}
+output "kubernetes_dashboard_version" {
+  value = module.eks.kubernetes_dashboard_version
+}
+output "kubernetes_dashboard_app_version" {
+  value = module.eks.kubernetes_dashboard_app_version
+}

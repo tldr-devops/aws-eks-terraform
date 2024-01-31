@@ -405,7 +405,22 @@ module "ingress_apisix" {
 
 # MONITORING
 
-# https://signoz.io/ vs https://openobserve.ai/ ?
+# https://signoz.io/ vs https://openobserve.ai/ vs qryn.metrico.in ?
+
+module "opentelemetry_operator" {
+  source = "./modules/opentelemetry-operator"
+
+  create        = var.enable_opentelemetry_operator
+  chart_version = var.opentelemetry_operator_chart_version
+  namespace     = var.opentelemetry_operator_namespace
+  set           = var.opentelemetry_operator_set
+  values        = var.opentelemetry_operator_values
+  tags          = var.tags
+
+  values = [
+    templatefile("${path.module}/universal_values.yaml", {})
+  ]
+}
 
 resource "random_password" "openobserve_root_password" {
   length           = 32
@@ -419,24 +434,13 @@ module "openobserve" {
   chart         = var.openobserve_chart_name
   chart_version = var.openobserve_chart_version
   namespace     = var.openobserve_namespace
+  set           = var.openobserve_set
+  values        = var.openobserve_values
   tags          = var.tags
 
   zo_root_user_email    = var.admin_email
   zo_root_user_password = random_password.openobserve_root_password.result
   oidc_provider_arn     = module.eks.oidc_provider_arn
-
-  values = [
-    templatefile("${path.module}/universal_values.yaml", {})
-  ]
-}
-
-module "opentelemetry_operator" {
-  source = "./modules/opentelemetry-operator"
-
-  create        = var.enable_opentelemetry_operator
-  chart_version = var.opentelemetry_operator_chart_version
-  namespace     = var.opentelemetry_operator_namespace
-  tags          = var.tags
 
   values = [
     templatefile("${path.module}/universal_values.yaml", {})
@@ -453,10 +457,29 @@ module "openobserve_collector" {
   create        = var.enable_openobserve_collector
   chart_version = var.openobserve_collector_chart_version
   namespace     = var.openobserve_collector_namespace
+  set           = var.openobserve_collector_set
+  values        = var.openobserve_collector_values
   tags          = var.tags
 
-  zo_endpoint      = "http://openobserve-standalone.${var.openobserve_namespace}.svc.cluster.local:5080/api/default/"
+  zo_endpoint      = "http://${var.var.openobserve_chart_name}.${var.openobserve_namespace}.svc.cluster.local:5080/api/default/"
   zo_authorization = "Basic ${local.openobserve_authorization}"
+
+  values = [
+    templatefile("${path.module}/universal_values.yaml", {})
+  ]
+}
+
+# DASHBOARD
+
+module "kubernetes_dashboard" {
+  source = "./modules/kubernetes-dashboard"
+
+  create        = var.enable_kubernetes_dashboard
+  chart_version = var.kubernetes_dashboard_chart_version
+  namespace     = var.kubernetes_dashboard_namespace
+  set           = var.kubernetes_dashboard_set
+  values        = var.kubernetes_dashboard_values
+  tags          = var.tags
 
   values = [
     templatefile("${path.module}/universal_values.yaml", {})

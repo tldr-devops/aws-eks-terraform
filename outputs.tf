@@ -127,3 +127,33 @@ output "openobserve_collector_app_version" {
   description = "The version number of the openobserve collector being deployed"
   value       = try(module.openobserve_collector.app_version, null)
 }
+
+output "kubernetes_dashboard_chart" {
+  description = "The name of the kubernetes dashboard chart"
+  value       = try(module.kubernetes_dashboard.chart, null)
+}
+
+output "kubernetes_dashboard_name" {
+  description = "Name is the name of the kubernetes dashboard release"
+  value       = try(module.kubernetes_dashboard.name, null)
+}
+
+output "kubernetes_dashboard_namespace" {
+  description = "Name of kubernetes dashboard namespace"
+  value       = try(module.kubernetes_dashboard.namespace, null)
+}
+
+output "kubernetes_dashboard_revision" {
+  description = "Version is an int32 which represents the version of the kubernetes dashboard release"
+  value       = try(module.kubernetes_dashboard.revision, null)
+}
+
+output "kubernetes_dashboard_version" {
+  description = "A SemVer 2 conformant version string of the kubernetes dashboard chart"
+  value       = try(module.kubernetes_dashboard.version, null)
+}
+
+output "kubernetes_dashboard_app_version" {
+  description = "The version number of the kubernetes dashboard being deployed"
+  value       = try(module.kubernetes_dashboard.app_version, null)
+}
