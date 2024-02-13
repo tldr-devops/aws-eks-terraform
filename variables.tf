@@ -267,6 +267,8 @@ variable "vpa_config" {
   default     = {}
 }
 
+# INGRESS
+
 variable "enable_ingress_apisix" {
   description = "Install ingress Apisix"
   type        = bool
@@ -284,6 +286,8 @@ variable "ingress_apisix_namespace" {
   type        = string
   default     = "ingress-apisix"
 }
+
+# OPERATORS
 
 variable "enable_opentelemetry_operator" {
   description = "Install Opentelemetry Operator"
@@ -315,10 +319,102 @@ variable "opentelemetry_operator_values" {
   default     = [""]
 }
 
+variable "enable_clickhouse_operator" {
+  description = "Install Clickhouse Operator"
+  type        = bool
+  default     = true
+}
+
+variable "clickhouse_operator_chart_version" {
+  description = "Clickhouse Operator chart version"
+  type        = string
+  default     = null
+}
+
+variable "clickhouse_operator_namespace" {
+  description = "Clickhouse Operator namespace"
+  type        = string
+  default     = "clickhouse"
+}
+
+variable "clickhouse_operator_set" {
+  description = "Clickhouse Operator helm value block with custom values to be merged with the values yaml"
+  type        = any
+  default     = []
+}
+
+variable "clickhouse_operator_values" {
+  description = "Clickhouse Operator list of values in raw yaml to pass to helm. Values will be merged, in order, as Helm does with multiple `-f` options"
+  type        = list(string)
+  default     = [""]
+}
+
+# MONITORING
+
+variable "enable_qryn" {
+  description = "Install Qryn"
+  type        = bool
+  default     = true
+}
+
+variable "qryn_chart_version" {
+  description = "Qryn chart version"
+  type        = string
+  default     = null
+}
+
+variable "qryn_chart_name" {
+  description = "Qryn chart name"
+  type        = string
+  default     = "qryn-helm"
+}
+
+variable "qryn_namespace" {
+  description = "Qryn namespace"
+  type        = string
+  default     = "qryn"
+}
+
+variable "qryn_set" {
+  description = "Qryn helm value block with custom values to be merged with the values yaml"
+  type        = any
+  default     = []
+}
+
+variable "qryn_values" {
+  description = "Qryn list of values in raw yaml to pass to helm. Values will be merged, in order, as Helm does with multiple `-f` options"
+  type        = list(string)
+  default     = [""]
+}
+
+variable "qryn_clickhouse_chart_version" {
+  description = "Qryn Clickhouse chart version"
+  type        = string
+  default     = null
+}
+
+variable "qryn_clickhouse_chart_name" {
+  description = "Qryn Clickhouse chart name"
+  type        = string
+  default     = "qryn-helm"
+}
+
+variable "qryn_clickhouse_set" {
+  description = "Qryn Clickhouse helm value block with custom values to be merged with the values yaml"
+  type        = any
+  default     = []
+}
+
+variable "qryn_clickhouse_values" {
+  description = "Qryn Clickhouse list of values in raw yaml to pass to helm. Values will be merged, in order, as Helm does with multiple `-f` options"
+  type        = list(string)
+  default     = [""]
+}
+
 variable "enable_openobserve" {
   description = "Install Openobserve"
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "openobserve_chart_version" {
@@ -354,7 +450,7 @@ variable "openobserve_values" {
 variable "enable_openobserve_collector" {
   description = "Install Openobserve Collector"
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "openobserve_collector_chart_version" {
@@ -380,6 +476,8 @@ variable "openobserve_collector_values" {
   type        = list(string)
   default     = [""]
 }
+
+# DASHBOARD
 
 variable "enable_kubernetes_dashboard" {
   description = "Install Kubernetes Dashboard"

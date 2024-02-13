@@ -392,6 +392,7 @@ module "addons" {
 
 module "ingress_apisix" {
   source = "./modules/apisix"
+  count = var.enable_ingress_apisix ? 1 : 0
 
   create        = var.enable_ingress_apisix
   chart_version = can(var.ingress_apisix_chart_version) ? var.ingress_apisix_chart_version : null
@@ -403,52 +404,106 @@ module "ingress_apisix" {
   ]
 }
 
-# MONITORING
-
-# https://signoz.io/ vs https://openobserve.ai/ vs qryn.metrico.in ?
+# OPERATOR
 
 module "opentelemetry_operator" {
   source = "./modules/opentelemetry-operator"
+  count = var.enable_opentelemetry_operator ? 1 : 0
 
   create        = var.enable_opentelemetry_operator
   chart_version = var.opentelemetry_operator_chart_version
   namespace     = var.opentelemetry_operator_namespace
   set           = var.opentelemetry_operator_set
-  values        = var.opentelemetry_operator_values
   tags          = var.tags
 
-  values = [
-    templatefile("${path.module}/universal_values.yaml", {})
-  ]
+  values = concat(
+    [templatefile("${path.module}/universal_values.yaml", {})],
+    var.opentelemetry_operator_values
+  )
 }
+
+module "clickhouse_operator" {
+  source = "./modules/clickhouse-operator"
+  count = var.enable_clickhouse_operator ? 1 : 0
+
+  create        = var.enable_clickhouse_operator
+  chart_version = var.clickhouse_operator_chart_version
+  namespace     = var.clickhouse_operator_namespace
+  set           = var.clickhouse_operator_set
+  tags          = var.tags
+
+  values = concat(
+    [templatefile("${path.module}/universal_values.yaml", {})],
+    var.clickhouse_operator_values
+  )
+}
+
+# MONITORING
+
+# https://signoz.io/ vs https://openobserve.ai/ vs qryn.metrico.in vs uptrace.dev ?
 
 resource "random_password" "openobserve_root_password" {
   length           = 32
   special          = true
 }
 
+resource "random_password" "qryn_root_password" {
+  length           = 32
+  special          = true
+}
+
+module "qryn" {
+  source = "./modules/qryn"
+  count = var.enable_qryn ? 1 : 0
+
+  create        = var.enable_qryn
+  chart_version = var.qryn_chart_version
+  namespace     = var.qryn_namespace
+  set           = var.qryn_set
+  tags          = var.tags
+
+  root_email    = var.admin_email
+  root_password = random_password.qryn_root_password.result
+  oidc_provider_arn     = module.eks.oidc_provider_arn
+
+  values = concat(
+    [templatefile("${path.module}/universal_values.yaml", {})],
+    var.qryn_values
+  )
+
+  clickhouse_chart_version = var.qryn_clickhouse_chart_version
+  clickhouse_set           = var.qryn_clickhouse_set
+
+  clickhouse_values = concat(
+    [templatefile("${path.module}/universal_values.yaml", {})],
+    var.qryn_clickhouse_values
+  )
+}
+
 module "openobserve" {
   source = "./modules/openobserve"
+  count = var.enable_openobserve ? 1 : 0
 
   create        = var.enable_openobserve
   chart         = var.openobserve_chart_name
   chart_version = var.openobserve_chart_version
   namespace     = var.openobserve_namespace
   set           = var.openobserve_set
-  values        = var.openobserve_values
   tags          = var.tags
 
   zo_root_user_email    = var.admin_email
   zo_root_user_password = random_password.openobserve_root_password.result
   oidc_provider_arn     = module.eks.oidc_provider_arn
 
-  values = [
-    templatefile("${path.module}/universal_values.yaml", {})
-  ]
+  values = concat(
+    [templatefile("${path.module}/universal_values.yaml", {})],
+    var.openobserve_values
+  )
 }
 
 module "openobserve_collector" {
   source = "./modules/openobserve-collector"
+  count = var.enable_openobserve_collector ? 1 : 0
 
   depends_on = [
     module.opentelemetry_operator
@@ -458,30 +513,31 @@ module "openobserve_collector" {
   chart_version = var.openobserve_collector_chart_version
   namespace     = var.openobserve_collector_namespace
   set           = var.openobserve_collector_set
-  values        = var.openobserve_collector_values
   tags          = var.tags
 
-  zo_endpoint      = "http://${var.var.openobserve_chart_name}.${var.openobserve_namespace}.svc.cluster.local:5080/api/default/"
+  zo_endpoint      = "http://${var.openobserve_chart_name}.${var.openobserve_namespace}.svc.cluster.local:5080/api/default/"
   zo_authorization = "Basic ${local.openobserve_authorization}"
 
-  values = [
-    templatefile("${path.module}/universal_values.yaml", {})
-  ]
+  values = concat(
+    [templatefile("${path.module}/universal_values.yaml", {})],
+    var.openobserve_collector_values
+  )
 }
 
 # DASHBOARD
 
 module "kubernetes_dashboard" {
   source = "./modules/kubernetes-dashboard"
+  count = var.enable_kubernetes_dashboard ? 1 : 0
 
   create        = var.enable_kubernetes_dashboard
   chart_version = var.kubernetes_dashboard_chart_version
   namespace     = var.kubernetes_dashboard_namespace
   set           = var.kubernetes_dashboard_set
-  values        = var.kubernetes_dashboard_values
   tags          = var.tags
 
-  values = [
-    templatefile("${path.module}/universal_values.yaml", {})
-  ]
+  values = concat(
+    [templatefile("${path.module}/universal_values.yaml", {})],
+    var.kubernetes_dashboard_values
+  )
 }

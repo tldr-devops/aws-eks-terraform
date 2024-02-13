@@ -63,6 +63,103 @@ output "apisix_viewer_key" {
   value       = try(module.ingress_apisix.apisix_viewer_key, null)
 }
 
+
+output "opentelemetry_operator_chart" {
+  description = "The name of the opentelemetry operator chart"
+  value       = try(module.opentelemetry_operator.chart, null)
+}
+
+output "opentelemetry_operator_name" {
+  description = "Name is the name of the opentelemetry operator release"
+  value       = try(module.opentelemetry_operator.name, null)
+}
+
+output "opentelemetry_operator_namespace" {
+  description = "Name of opentelemetry operator namespace"
+  value       = try(module.opentelemetry_operator.namespace, null)
+}
+
+output "opentelemetry_operator_revision" {
+  description = "Version is an int32 which represents the version of the opentelemetry operator release"
+  value       = try(module.opentelemetry_operator.revision, null)
+}
+
+output "opentelemetry_operator_version" {
+  description = "A SemVer 2 conformant version string of the opentelemetry operator chart"
+  value       = try(module.opentelemetry_operator.version, null)
+}
+
+output "opentelemetry_operator_app_version" {
+  description = "The version number of the opentelemetry operator being deployed"
+  value       = try(module.opentelemetry_operator.app_version, null)
+}
+
+
+output "clickhouse_operator_chart" {
+  description = "The name of the clickhouse operator chart"
+  value       = try(module.clickhouse_operator.chart, null)
+}
+
+output "clickhouse_operator_name" {
+  description = "Name is the name of the clickhouse operator release"
+  value       = try(module.clickhouse_operator.name, null)
+}
+
+output "clickhouse_operator_namespace" {
+  description = "Name of clickhouse operator namespace"
+  value       = try(module.clickhouse_operator.namespace, null)
+}
+
+output "clickhouse_operator_revision" {
+  description = "Version is an int32 which represents the version of the clickhouse operator release"
+  value       = try(module.clickhouse_operator.revision, null)
+}
+
+output "clickhouse_operator_version" {
+  description = "A SemVer 2 conformant version string of the clickhouse operator chart"
+  value       = try(module.clickhouse_operator.version, null)
+}
+
+output "clickhouse_operator_app_version" {
+  description = "The version number of the clickhouse operator being deployed"
+  value       = try(module.clickhouse_operator.app_version, null)
+}
+
+output "qryn_chart" {
+  description = "The name of the qryn chart"
+  value       = try(module.qryn.chart, null)
+}
+
+output "qryn_name" {
+  description = "Name is the name of the qryn release"
+  value       = try(module.qryn.name, null)
+}
+
+output "qryn_namespace" {
+  description = "Name of qryn namespace"
+  value       = try(module.qryn.namespace, null)
+}
+
+output "qryn_revision" {
+  description = "Version is an int32 which represents the version of the qryn release"
+  value       = try(module.qryn.revision, null)
+}
+
+output "qryn_version" {
+  description = "A SemVer 2 conformant version string of the qryn chart"
+  value       = try(module.qryn.version, null)
+}
+
+output "qryn_app_version" {
+  description = "The version number of the qryn being deployed"
+  value       = try(module.qryn.app_version, null)
+}
+
+output "qryn_root_password" {
+  description = "The qryn root password"
+  value       = try(module.qryn.root_password, null)
+}
+
 output "openobserve_chart" {
   description = "The name of the openobserve chart"
   value       = try(module.openobserve.chart, null)
