@@ -73,13 +73,14 @@ locals {
                       <type>s3</type>
                       <endpoint>https://${aws_s3_bucket.qryn.bucket_regional_domain_name}/qryn/</endpoint>
                       <use_environment_credentials>true</use_environment_credentials>
+                      <metadata_path>/bitnami/clickhouse/data/disks/s3_default/</metadata_path>
+                      <cache_enabled>true</cache_enabled>
+                      <data_cache_enabled>true</data_cache_enabled>
+                      <enable_filesystem_cache>true</enable_filesystem_cache>
+                      <cache_on_write_operations>true</cache_on_write_operations>
+                      <max_cache_size>4Gi</max_cache_size>
+                      <cache_path>/bitnami/clickhouse/data/disks/s3_default/cache/</cache_path>
                   </disk_s3>
-                  <!-- s3_cache>
-                    <type>cache</type>
-                    <disk>s3_disk</disk>
-                    <path>/bitnami/clickhouse/disks/s3_cache/</path>
-                    <max_size>4Gi</max_size>
-                  </s3_cache -->
               </disks>
               <policies>
                   <policy_s3_only>
