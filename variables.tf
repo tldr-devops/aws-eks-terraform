@@ -351,22 +351,82 @@ variable "clickhouse_operator_values" {
 
 # MONITORING
 
+variable "enable_uptrace" {
+  description = "Install Uptrace"
+  type        = bool
+  default     = true
+}
+
+variable "uptrace_chart_version" {
+  description = "Uptrace chart version"
+  type        = string
+  default     = null
+}
+
+variable "uptrace_namespace" {
+  description = "Uptrace namespace"
+  type        = string
+  default     = "uptrace"
+}
+
+variable "uptrace_set" {
+  description = "Uptrace helm value block with custom values to be merged with the values yaml"
+  type        = any
+  default     = []
+}
+
+variable "uptrace_values" {
+  description = "Uptrace list of values in raw yaml to pass to helm. Values will be merged, in order, as Helm does with multiple `-f` options"
+  type        = list(string)
+  default     = [""]
+}
+
+variable "uptrace_clickhouse_chart_version" {
+  description = "Uptrace Clickhouse chart version"
+  type        = string
+  default     = null
+}
+
+variable "uptrace_clickhouse_set" {
+  description = "Uptrace Clickhouse helm value block with custom values to be merged with the values yaml"
+  type        = any
+  default     = []
+}
+
+variable "uptrace_clickhouse_values" {
+  description = "Uptrace Clickhouse list of values in raw yaml to pass to helm. Values will be merged, in order, as Helm does with multiple `-f` options"
+  type        = list(string)
+  default     = [""]
+}
+
+variable "uptrace_postgresql_chart_version" {
+  description = "Uptrace Postgresql chart version"
+  type        = string
+  default     = null
+}
+
+variable "uptrace_postgresql_set" {
+  description = "Uptrace Postgresql helm value block with custom values to be merged with the values yaml"
+  type        = any
+  default     = []
+}
+
+variable "uptrace_postgresql_values" {
+  description = "Uptrace Postgresql list of values in raw yaml to pass to helm. Values will be merged, in order, as Helm does with multiple `-f` options"
+  type        = list(string)
+  default     = [""]
+}
+
 variable "enable_qryn" {
   description = "Install Qryn"
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "qryn_chart_version" {
   description = "Qryn chart version"
   type        = string
   default     = null
-}
-
-variable "qryn_chart_name" {
-  description = "Qryn chart name"
-  type        = string
-  default     = "qryn-helm"
 }
 
 variable "qryn_namespace" {
@@ -391,12 +451,6 @@ variable "qryn_clickhouse_chart_version" {
   description = "Qryn Clickhouse chart version"
   type        = string
   default     = null
-}
-
-variable "qryn_clickhouse_chart_name" {
-  description = "Qryn Clickhouse chart name"
-  type        = string
-  default     = "qryn-helm"
 }
 
 variable "qryn_clickhouse_set" {

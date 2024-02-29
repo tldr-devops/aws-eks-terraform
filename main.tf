@@ -286,8 +286,8 @@ locals {
 
   vpa_config = merge(local.universal_addon_config, var.vpa_config)
 
-  # don't like it but for speedup
-  openobserve_authorization = base64encode("${var.admin_email}:${random_password.openobserve_root_password.result}")
+  # don't like using root password for monitoring agents but for speedup
+  openobserve_authorization = try(base64encode("${var.admin_email}:${module.openobserve.zo_root_user_password}"), "")
 
 }
 
@@ -394,6 +394,11 @@ module "ingress_apisix" {
   source = "./modules/apisix"
   count = var.enable_ingress_apisix ? 1 : 0
 
+  depends_on = [
+    module.eks
+    module.addons
+  ]
+
   create        = var.enable_ingress_apisix
   chart_version = can(var.ingress_apisix_chart_version) ? var.ingress_apisix_chart_version : null
   namespace     = var.ingress_apisix_namespace
@@ -409,6 +414,11 @@ module "ingress_apisix" {
 module "opentelemetry_operator" {
   source = "./modules/opentelemetry-operator"
   count = var.enable_opentelemetry_operator ? 1 : 0
+
+  depends_on = [
+    module.eks
+    module.addons
+  ]
 
   create        = var.enable_opentelemetry_operator
   chart_version = var.opentelemetry_operator_chart_version
@@ -426,6 +436,11 @@ module "clickhouse_operator" {
   source = "./modules/clickhouse-operator"
   count = var.enable_clickhouse_operator ? 1 : 0
 
+  depends_on = [
+    module.eks
+    module.addons
+  ]
+
   create        = var.enable_clickhouse_operator
   chart_version = var.clickhouse_operator_chart_version
   namespace     = var.clickhouse_operator_namespace
@@ -440,21 +455,57 @@ module "clickhouse_operator" {
 
 # MONITORING
 
-# https://signoz.io/ vs https://openobserve.ai/ vs qryn.metrico.in vs uptrace.dev ?
+# signoz.io vs openobserve.ai vs qryn.metrico.in vs uptrace.dev vs skywalking.apache.org
+# https://uptrace.dev/get/open-source-apm.html#why-not
 
-resource "random_password" "openobserve_root_password" {
-  length           = 32
-  special          = true
-}
+module "uptrace" {
+  source = "./modules/uptrace"
+  count = var.enable_uptrace ? 1 : 0
 
-resource "random_password" "qryn_root_password" {
-  length           = 32
-  special          = true
+  depends_on = [
+    module.eks
+    module.addons
+  ]
+
+  create        = var.enable_uptrace
+  chart_version = var.uptrace_chart_version
+  namespace     = var.uptrace_namespace
+  set           = var.uptrace_set
+  tags          = var.tags
+
+  root_email    = var.admin_email
+  oidc_provider_arn     = module.eks.oidc_provider_arn
+
+  values = concat(
+    [templatefile("${path.module}/universal_values.yaml", {})],
+    var.uptrace_values
+  )
+
+  clickhouse_chart_version = var.uptrace_clickhouse_chart_version
+  clickhouse_set           = var.uptrace_clickhouse_set
+
+  clickhouse_values = concat(
+    [templatefile("${path.module}/universal_values.yaml", {})],
+    var.uptrace_clickhouse_values
+  )
+
+  postgresql_chart_version = var.uptrace_postgresql_chart_version
+  postgresql_set           = var.uptrace_postgresql_set
+
+  postgresql_values = concat(
+    [templatefile("${path.module}/universal_values.yaml", {})],
+    var.uptrace_postgresql_values
+  )
 }
 
 module "qryn" {
   source = "./modules/qryn"
   count = var.enable_qryn ? 1 : 0
+
+  depends_on = [
+    module.eks
+    module.addons
+  ]
 
   create        = var.enable_qryn
   chart_version = var.qryn_chart_version
@@ -463,7 +514,6 @@ module "qryn" {
   tags          = var.tags
 
   root_email    = var.admin_email
-  root_password = random_password.qryn_root_password.result
   oidc_provider_arn     = module.eks.oidc_provider_arn
 
   values = concat(
@@ -484,6 +534,11 @@ module "openobserve" {
   source = "./modules/openobserve"
   count = var.enable_openobserve ? 1 : 0
 
+  depends_on = [
+    module.eks
+    module.addons
+  ]
+
   create        = var.enable_openobserve
   chart         = var.openobserve_chart_name
   chart_version = var.openobserve_chart_version
@@ -492,7 +547,6 @@ module "openobserve" {
   tags          = var.tags
 
   zo_root_user_email    = var.admin_email
-  zo_root_user_password = random_password.openobserve_root_password.result
   oidc_provider_arn     = module.eks.oidc_provider_arn
 
   values = concat(
@@ -506,6 +560,8 @@ module "openobserve_collector" {
   count = var.enable_openobserve_collector ? 1 : 0
 
   depends_on = [
+    module.eks
+    module.addons
     module.opentelemetry_operator
   ]
 
@@ -529,6 +585,11 @@ module "openobserve_collector" {
 module "kubernetes_dashboard" {
   source = "./modules/kubernetes-dashboard"
   count = var.enable_kubernetes_dashboard ? 1 : 0
+
+  depends_on = [
+    module.eks
+    module.addons
+  ]
 
   create        = var.enable_kubernetes_dashboard
   chart_version = var.kubernetes_dashboard_chart_version

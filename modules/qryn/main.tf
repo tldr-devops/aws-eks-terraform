@@ -1,14 +1,11 @@
 data "aws_region" "current" {}
 
 locals {
-  root_password = try(var.root_password, random_password.qryn_root_password.result)
+  root_password = coalesce(var.root_password, random_password.qryn_root_password.result)
 
   # https://github.com/metrico/qryn-helm/blob/main/values.yaml
   values = [
     <<-EOT
-      image:
-        repository: qxip/qryn
-        tag: bun
       livenessProbe:
         enabled: true
         endpoint: "/metrics"
@@ -38,15 +35,11 @@ locals {
   ]
   set = []
 
-  service_account = "qryn"
+  service_account = "qryn-clickhouse"
 
   # https://github.com/bitnami/charts/blob/main/bitnami/clickhouse/values.yaml
   clickhouse_values  = [
     <<-EOT
-      image:
-        registry: docker.io
-        repository: bitnami/clickhouse
-        tag: latest
       shards: 1
       replicaCount: 1
       auth:

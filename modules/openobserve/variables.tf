@@ -6,6 +6,7 @@ variable "zo_root_user_email" {
 variable "zo_root_user_password" {
   description = "auth.ZO_ROOT_USER_PASSWORD helm chart value"
   type        = string
+  default     = null
 }
 
 variable "create" {

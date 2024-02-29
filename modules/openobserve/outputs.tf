@@ -82,4 +82,5 @@ output "iam_policy" {
 output "zo_root_user_password" {
   description = "The openobserve root password"
   value       = local.zo_root_user_password
+  sensitive   = true
 }
