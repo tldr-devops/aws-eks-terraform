@@ -289,6 +289,36 @@ variable "ingress_apisix_namespace" {
 
 # OPERATORS
 
+variable "enable_victoriametrics_operator" {
+  description = "Install VictoriaMetrics Operator"
+  type        = bool
+  default     = true
+}
+
+variable "victoriametrics_operator_chart_version" {
+  description = "VictoriaMetrics Operator chart version"
+  type        = string
+  default     = null
+}
+
+variable "victoriametrics_operator_namespace" {
+  description = "VictoriaMetrics Operator namespace"
+  type        = string
+  default     = "monitoring"
+}
+
+variable "victoriametrics_operator_set" {
+  description = "VictoriaMetrics Operator helm value block with custom values to be merged with the values yaml"
+  type        = any
+  default     = []
+}
+
+variable "victoriametrics_operator_values" {
+  description = "VictoriaMetrics Operator list of values in raw yaml to pass to helm. Values will be merged, in order, as Helm does with multiple `-f` options"
+  type        = list(string)
+  default     = [""]
+}
+
 variable "enable_opentelemetry_operator" {
   description = "Install Opentelemetry Operator"
   type        = bool
@@ -304,7 +334,7 @@ variable "opentelemetry_operator_chart_version" {
 variable "opentelemetry_operator_namespace" {
   description = "Opentelemetry Operator namespace"
   type        = string
-  default     = "opentelemetry"
+  default     = "monitoring"
 }
 
 variable "opentelemetry_operator_set" {
@@ -349,6 +379,36 @@ variable "clickhouse_operator_values" {
   default     = [""]
 }
 
+variable "enable_grafana_operator" {
+  description = "Install Grafana Operator"
+  type        = bool
+  default     = true
+}
+
+variable "grafana_operator_chart_version" {
+  description = "Grafana Operator chart version"
+  type        = string
+  default     = null
+}
+
+variable "grafana_operator_namespace" {
+  description = "Grafana Operator namespace"
+  type        = string
+  default     = "monitoring"
+}
+
+variable "grafana_operator_set" {
+  description = "Grafana Operator helm value block with custom values to be merged with the values yaml"
+  type        = any
+  default     = []
+}
+
+variable "grafana_operator_values" {
+  description = "Grafana Operator list of values in raw yaml to pass to helm. Values will be merged, in order, as Helm does with multiple `-f` options"
+  type        = list(string)
+  default     = [""]
+}
+
 # MONITORING
 
 variable "enable_uptrace" {
@@ -366,7 +426,7 @@ variable "uptrace_chart_version" {
 variable "uptrace_namespace" {
   description = "Uptrace namespace"
   type        = string
-  default     = "uptrace"
+  default     = "monitoring"
 }
 
 variable "uptrace_set" {
@@ -432,7 +492,7 @@ variable "qryn_chart_version" {
 variable "qryn_namespace" {
   description = "Qryn namespace"
   type        = string
-  default     = "qryn"
+  default     = "monitoring"
 }
 
 variable "qryn_set" {

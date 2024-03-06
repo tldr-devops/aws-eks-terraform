@@ -10,12 +10,20 @@ output "apisix" {
   value       = try(module.ingress_apisix, null)
 }
 
+output "victoriametrics_operator" {
+  value       = try(module.victoriametrics_operator, null)
+}
+
 output "opentelemetry_operator" {
   value       = try(module.opentelemetry_operator, null)
 }
 
 output "clickhouse_operator" {
   value       = try(module.clickhouse_operator, null)
+}
+
+output "grafana_operator" {
+  value       = try(module.grafana_operator, null)
 }
 
 output "uptrace" {

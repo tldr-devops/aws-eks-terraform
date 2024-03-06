@@ -18,6 +18,7 @@ cd example
 terraform init
 terraform apply -target=module.vpc
 terraform apply
+terraform output output
 ```
 
 ## Variables

@@ -395,7 +395,7 @@ module "ingress_apisix" {
   count = var.enable_ingress_apisix ? 1 : 0
 
   depends_on = [
-    module.eks
+    module.eks,
     module.addons
   ]
 
@@ -411,12 +411,33 @@ module "ingress_apisix" {
 
 # OPERATOR
 
+module "victoriametrics_operator" {
+  source = "./modules/victoriametrics-operator"
+  count = var.enable_victoriametrics_operator ? 1 : 0
+
+  depends_on = [
+    module.eks,
+    module.addons
+  ]
+
+  create        = var.enable_victoriametrics_operator
+  chart_version = var.victoriametrics_operator_chart_version
+  namespace     = var.victoriametrics_operator_namespace
+  set           = var.victoriametrics_operator_set
+  tags          = var.tags
+
+  values = concat(
+    [templatefile("${path.module}/universal_values.yaml", {})],
+    var.victoriametrics_operator_values
+  )
+}
+
 module "opentelemetry_operator" {
   source = "./modules/opentelemetry-operator"
   count = var.enable_opentelemetry_operator ? 1 : 0
 
   depends_on = [
-    module.eks
+    module.eks,
     module.addons
   ]
 
@@ -432,12 +453,33 @@ module "opentelemetry_operator" {
   )
 }
 
+module "grafana_operator" {
+  source = "./modules/grafana-operator"
+  count = var.enable_grafana_operator ? 1 : 0
+
+  depends_on = [
+    module.eks,
+    module.addons
+  ]
+
+  create        = var.enable_grafana_operator
+  chart_version = var.grafana_operator_chart_version
+  namespace     = var.grafana_operator_namespace
+  set           = var.grafana_operator_set
+  tags          = var.tags
+
+  values = concat(
+    [templatefile("${path.module}/universal_values.yaml", {})],
+    var.grafana_operator_values
+  )
+}
+
 module "clickhouse_operator" {
   source = "./modules/clickhouse-operator"
   count = var.enable_clickhouse_operator ? 1 : 0
 
   depends_on = [
-    module.eks
+    module.eks,
     module.addons
   ]
 
@@ -463,7 +505,7 @@ module "uptrace" {
   count = var.enable_uptrace ? 1 : 0
 
   depends_on = [
-    module.eks
+    module.eks,
     module.addons
   ]
 
@@ -503,7 +545,7 @@ module "qryn" {
   count = var.enable_qryn ? 1 : 0
 
   depends_on = [
-    module.eks
+    module.eks,
     module.addons
   ]
 
@@ -535,7 +577,7 @@ module "openobserve" {
   count = var.enable_openobserve ? 1 : 0
 
   depends_on = [
-    module.eks
+    module.eks,
     module.addons
   ]
 
@@ -560,8 +602,8 @@ module "openobserve_collector" {
   count = var.enable_openobserve_collector ? 1 : 0
 
   depends_on = [
-    module.eks
-    module.addons
+    module.eks,
+    module.addons,
     module.opentelemetry_operator
   ]
 
@@ -587,7 +629,7 @@ module "kubernetes_dashboard" {
   count = var.enable_kubernetes_dashboard ? 1 : 0
 
   depends_on = [
-    module.eks
+    module.eks,
     module.addons
   ]
 

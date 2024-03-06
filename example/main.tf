@@ -140,4 +140,20 @@ module "eks" {
   eks_managed_node_groups                         = local.eks_managed_node_groups
   fargate_profiles                                = local.fargate_profiles
   tags                                            = local.tags
+
+  enable_aws_efs_csi_driver       = true
+  enable_cert_manager             = true
+  enable_cluster_autoscaler       = true
+  enable_metrics_server           = true
+  enable_vpa                      = true
+  enable_ingress_apisix           = true
+  enable_victoriametrics_operator = true
+  enable_opentelemetry_operator   = true
+  enable_clickhouse_operator      = true
+  enable_grafana_operator         = true
+  enable_uptrace                  = false
+  enable_qryn                     = false
+  enable_openobserve              = false
+  enable_openobserve_collector    = false
+  enable_kubernetes_dashboard     = false
 }
