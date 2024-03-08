@@ -26,6 +26,10 @@ output "grafana_operator" {
   value       = try(module.grafana_operator, null)
 }
 
+output "grafana" {
+  value       = try(module.grafana, null)
+}
+
 output "uptrace" {
   value       = try(module.uptrace, null)
 }

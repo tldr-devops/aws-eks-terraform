@@ -411,6 +411,36 @@ variable "grafana_operator_values" {
 
 # MONITORING
 
+variable "enable_grafana" {
+  description = "Install Grafana"
+  type        = bool
+  default     = true
+}
+
+variable "grafana_chart_version" {
+  description = "Grafana chart version"
+  type        = string
+  default     = null
+}
+
+variable "grafana_namespace" {
+  description = "Grafana namespace"
+  type        = string
+  default     = "monitoring"
+}
+
+variable "grafana_set" {
+  description = "Grafana helm value block with custom values to be merged with the values yaml"
+  type        = any
+  default     = []
+}
+
+variable "grafana_values" {
+  description = "Grafana list of values in raw yaml to pass to helm. Values will be merged, in order, as Helm does with multiple `-f` options"
+  type        = list(string)
+  default     = [""]
+}
+
 variable "enable_uptrace" {
   description = "Install Uptrace"
   type        = bool

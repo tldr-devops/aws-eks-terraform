@@ -151,6 +151,7 @@ module "eks" {
   enable_opentelemetry_operator   = true
   enable_clickhouse_operator      = true
   enable_grafana_operator         = true
+  enable_grafana                  = true
   enable_uptrace                  = false
   enable_qryn                     = false
   enable_openobserve              = false

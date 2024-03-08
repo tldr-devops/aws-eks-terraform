@@ -24,20 +24,6 @@ provider "helm" {
   }
 }
 
-# provider "kubectl" {
-#   apply_retry_count      = 5
-#   host                   = module.eks.cluster_endpoint
-#   cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
-#   load_config_file       = false
-# 
-#   exec {
-#     api_version = "client.authentication.k8s.io/v1beta1"
-#     command     = "aws"
-#     # This requires the awscli to be installed locally where Terraform is executed
-#     args = ["eks", "get-token", "--cluster-name", module.eks.cluster_name]
-#   }
-# }
-
 data "aws_vpc" "default" {
   default = true
 }
@@ -497,6 +483,32 @@ module "clickhouse_operator" {
 
 # MONITORING
 
+module "grafana" {
+  source = "./modules/grafana"
+  count = var.enable_grafana ? 1 : 0
+
+  depends_on = [
+    module.eks,
+    module.addons,
+    module.grafana_operator
+  ]
+
+  create        = var.enable_grafana
+  chart_version = var.grafana_chart_version
+  namespace     = var.grafana_namespace
+  set           = var.grafana_set
+  tags          = var.tags
+
+  admin_user                    = var.admin_email
+  grafana_operator_integration  = var.enable_grafana_operator
+  grafana_operator_namespace    = var.grafana_operator_namespace
+
+  values = concat(
+    [templatefile("${path.module}/universal_values.yaml", {})],
+    var.grafana_values
+  )
+}
+
 # signoz.io vs openobserve.ai vs qryn.metrico.in vs uptrace.dev vs skywalking.apache.org
 # https://uptrace.dev/get/open-source-apm.html#why-not
 
@@ -571,6 +583,8 @@ module "qryn" {
     var.qryn_clickhouse_values
   )
 }
+
+
 
 module "openobserve" {
   source = "./modules/openobserve"
