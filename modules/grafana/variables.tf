@@ -1,6 +1,7 @@
 variable "admin_user" {
   description = "Grafana admin user"
   type        = string
+  default     = "admin"
 }
 
 variable "admin_password" {
@@ -160,7 +161,7 @@ variable "reuse_values" {
 variable "reset_values" {
   description = "When upgrading, reset the values to the ones built into the chart. Defaults to `false`"
   type        = bool
-  default     = null
+  default     = true
 }
 
 variable "force_update" {

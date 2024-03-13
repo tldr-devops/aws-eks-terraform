@@ -44,7 +44,8 @@ locals {
       replicaCount: 1
       auth:
         username: default
-        password: "${random_password.clickhouse_password.result}"
+        existingSecret: "${kubernetes_secret.clickhouse_password.metadata[0].name}"
+        existingSecretKey: "password"
       persistence:
         size: 5Gi
       automountServiceAccountToken: true
@@ -98,6 +99,36 @@ resource "random_password" "qryn_root_password" {
 resource "random_password" "clickhouse_password" {
   length           = 32
   special          = false
+}
+
+data "kubernetes_namespace" "qryn" {
+  metadata {
+    name = var.namespace
+  }
+}
+
+resource "kubernetes_namespace" "qryn" {
+  count = var.create_namespace && ! (length(data.kubernetes_namespace.qryn) > 0) ? 1 : 0
+
+  metadata {
+    name = var.namespace
+  }
+}
+
+resource "kubernetes_secret" "clickhouse_password" {
+
+  depends_on = [
+    kubernetes_namespace.qryn
+  ]
+
+  metadata {
+    generate_name = "qryn-clickhouse-password"
+    namespace     = var.namespace
+  }
+
+  data = {
+    password = random_password.clickhouse_password.result
+  }
 }
 
 # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket
@@ -198,6 +229,10 @@ module "clickhouse" {
   source = "aws-ia/eks-blueprints-addon/aws"
   version = "~> 1.1"
 
+  depends_on = [
+    module.role
+  ]
+
   set = var.clickhouse_set
 
   values = concat(
@@ -248,6 +283,10 @@ module "clickhouse" {
 module "qryn" {
   source = "aws-ia/eks-blueprints-addon/aws"
   version = "~> 1.1"
+
+  depends_on = [
+    module.clickhouse
+  ]
 
   set = var.set
 

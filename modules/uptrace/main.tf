@@ -124,7 +124,8 @@ locals {
       replicaCount: 1
       auth:
         username: default
-        password: "${random_password.clickhouse_password.result}"
+        existingSecret: "${kubernetes_secret.clickhouse_password.metadata[0].name}"
+        existingSecretKey: "password"
       persistence:
         size: 5Gi
       automountServiceAccountToken: true
@@ -229,22 +230,20 @@ locals {
     <<-EOT
       auth:
         ## @param auth.enablePostgresUser Assign a password to the "postgres" admin user. Otherwise, remote access will be blocked for this user
-        ##
         enablePostgresUser: true
         ## @param auth.postgresPassword Password for the "postgres" admin user. Ignored if `auth.existingSecret` is provided
-        ##
-        postgresPassword: "${random_password.postgresql_password.result}"
+        # postgresPassword: "${random_password.postgresql_password.result}"
         ## @param auth.username Name for a custom user to create
-        ##
         username: "uptrace"
         ## @param auth.password Password for the custom user to create. Ignored if `auth.existingSecret` is provided
-        ##
-        password: "${random_password.postgresql_password.result}"
+        # password: "${random_password.postgresql_password.result}"
         ## @param auth.database Name for a custom database to create
-        ##
         database: "uptrace"
-        ## @param auth.replicationUsername Name of the replication user
-        ##
+        ## @param auth.existingSecret Name of existing secret to use for PostgreSQL credentials
+        existingSecret: "${kubernetes_secret.postgresql_password.metadata[0].name}"
+        secretKeys:
+          adminPasswordKey: "password"
+          userPasswordKey: "password"
       architecture: standalone
       audit:
         logHostname: false
@@ -287,9 +286,55 @@ resource "random_password" "clickhouse_password" {
   special          = false
 }
 
+data "kubernetes_namespace" "uptrace" {
+  metadata {
+    name = var.namespace
+  }
+}
+
+resource "kubernetes_namespace" "uptrace" {
+  count = var.create_namespace && ! (length(data.kubernetes_namespace.uptrace) > 0) ? 1 : 0
+
+  metadata {
+    name = var.namespace
+  }
+}
+
+resource "kubernetes_secret" "clickhouse_password" {
+
+  depends_on = [
+    kubernetes_namespace.uptrace
+  ]
+
+  metadata {
+    generate_name = "uptrace-clickhouse-password"
+    namespace     = var.namespace
+  }
+
+  data = {
+    password = random_password.clickhouse_password.result
+  }
+}
+
 resource "random_password" "postgresql_password" {
   length           = 32
   special          = false
+}
+
+resource "kubernetes_secret" "postgresql_password" {
+
+  depends_on = [
+    kubernetes_namespace.uptrace
+  ]
+
+  metadata {
+    generate_name = "uptrace-postgresql-password"
+    namespace     = var.namespace
+  }
+
+  data = {
+    password = random_password.postgresql_password.result
+  }
 }
 
 # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket
@@ -389,6 +434,10 @@ module "role" {
 module "clickhouse" {
   source = "aws-ia/eks-blueprints-addon/aws"
   version = "~> 1.1"
+
+  depends_on = [
+    module.role
+  ]
 
   set = var.clickhouse_set
 
@@ -491,6 +540,11 @@ module "postgresql" {
 module "uptrace" {
   source = "aws-ia/eks-blueprints-addon/aws"
   version = "~> 1.1"
+
+  depends_on = [
+    module.clickhouse,
+    module.postgresql
+  ]
 
   set = var.set
 

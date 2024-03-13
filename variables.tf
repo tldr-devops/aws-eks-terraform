@@ -411,6 +411,54 @@ variable "grafana_operator_values" {
 
 # MONITORING
 
+variable "enable_victoriametrics" {
+  description = "Install VictoriaMetrics Stack"
+  type        = bool
+  default     = true
+}
+
+variable "victoriametrics_chart_version" {
+  description = "VictoriaMetrics Stack chart version"
+  type        = string
+  default     = null
+}
+
+variable "victoriametrics_namespace" {
+  description = "VictoriaMetrics Stack namespace"
+  type        = string
+  default     = "monitoring"
+}
+
+variable "victoriametrics_set" {
+  description = "VictoriaMetrics Stack helm value block with custom values to be merged with the values yaml"
+  type        = any
+  default     = []
+}
+
+variable "victoriametrics_values" {
+  description = "VictoriaMetrics Stack list of values in raw yaml to pass to helm. Values will be merged, in order, as Helm does with multiple `-f` options"
+  type        = list(string)
+  default     = [""]
+}
+
+variable "victoriametrics_auth_chart_version" {
+  description = "VictoriaMetrics Auth chart version"
+  type        = string
+  default     = null
+}
+
+variable "victoriametrics_auth_set" {
+  description = "VictoriaMetrics Auth helm value block with custom values to be merged with the values yaml"
+  type        = any
+  default     = []
+}
+
+variable "victoriametrics_auth_values" {
+  description = "VictoriaMetrics Auth list of values in raw yaml to pass to helm. Values will be merged, in order, as Helm does with multiple `-f` options"
+  type        = list(string)
+  default     = [""]
+}
+
 variable "enable_grafana" {
   description = "Install Grafana"
   type        = bool

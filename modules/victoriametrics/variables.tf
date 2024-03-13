@@ -1,3 +1,21 @@
+variable "grafana_admin_user" {
+  description = "Grafana admin user"
+  type        = string
+  default     = "admin"
+}
+
+variable "grafana_admin_password" {
+  description = "Grafana admin password"
+  type        = string
+  default     = null
+}
+
+variable "auth_vmagent_rw_password" {
+  description = "VM Agent read write password"
+  type        = string
+  default     = null
+}
+
 variable "create" {
   description = "Controls if resources should be created (affects all resources)"
   type        = bool
@@ -29,13 +47,13 @@ variable "name" {
 variable "description" {
   description = "Set release description attribute (visible in the history)"
   type        = string
-  default     = "Apisix ingress helm Chart deployment configuration"
+  default     = "Victoria Metrics Stack"
 }
 
 variable "namespace" {
   description = "The namespace to install the release into. Defaults to `default`"
   type        = string
-  default     = "ingress-apisix"
+  default     = "victoriametrics"
 }
 
 variable "create_namespace" {
@@ -47,7 +65,7 @@ variable "create_namespace" {
 variable "chart" {
   description = "Chart name to be installed. The chart name can be local path, a URL to a chart, or the name of the chart if `repository` is specified"
   type        = string
-  default     = "apisix-ingress-controller"
+  default     = "victoria-metrics-k8s-stack"
 }
 
 variable "chart_version" {
@@ -59,7 +77,7 @@ variable "chart_version" {
 variable "repository" {
   description = "Repository URL where to locate the requested chart"
   type        = string
-  default     = "https://charts.apiseven.com"
+  default     = "https://victoriametrics.github.io/helm-charts/"
 }
 
 variable "values" {
@@ -363,3 +381,224 @@ variable "policy_description" {
   type        = string
   default     = null
 }
+
+################################################################################
+# Helm Release Victoria Metrics Auth
+################################################################################
+
+variable "auth_create_release" {
+  description = "Determines whether the Helm release is created"
+  type        = bool
+  default     = true
+}
+
+variable "auth_name" {
+  description = "Name of the Helm release"
+  type        = string
+  default     = ""
+}
+
+variable "auth_description" {
+  description = "Set release description attribute (visible in the history)"
+  type        = string
+  default     = "Victoria Metrics Auth"
+}
+
+variable "auth_chart" {
+  description = "Chart name to be installed. The chart name can be local path, a URL to a chart, or the name of the chart if `repository` is specified"
+  type        = string
+  default     = "victoria-metrics-auth"
+}
+
+variable "auth_chart_version" {
+  description = "Specify the exact chart version to install. If this is not specified, the latest version is installed"
+  type        = string
+  default     = null
+}
+
+variable "auth_repository" {
+  description = "Repository URL where to locate the requested chart"
+  type        = string
+  default     = "https://victoriametrics.github.io/helm-charts/"
+}
+
+variable "auth_values" {
+  description = "List of values in raw yaml to pass to helm. Values will be merged, in order, as Helm does with multiple `-f` options"
+  type        = list(string)
+  default     = null
+}
+
+variable "auth_timeout" {
+  description = "Time in seconds to wait for any individual kubernetes operation (like Jobs for hooks). Defaults to `300` seconds"
+  type        = number
+  default     = null
+}
+
+variable "auth_repository_key_file" {
+  description = "The repositories cert key file"
+  type        = string
+  default     = null
+}
+
+variable "auth_repository_cert_file" {
+  description = "The repositories cert file"
+  type        = string
+  default     = null
+}
+
+variable "auth_repository_ca_file" {
+  description = "The Repositories CA File"
+  type        = string
+  default     = null
+}
+
+variable "auth_repository_username" {
+  description = "Username for HTTP basic authentication against the repository"
+  type        = string
+  default     = null
+}
+
+variable "auth_repository_password" {
+  description = "Password for HTTP basic authentication against the repository"
+  type        = string
+  default     = null
+}
+
+variable "auth_devel" {
+  description = "Use chart development versions, too. Equivalent to version '>0.0.0-0'. If version is set, this is ignored"
+  type        = bool
+  default     = null
+}
+
+variable "auth_verify" {
+  description = "Verify the package before installing it. Helm uses a provenance file to verify the integrity of the chart; this must be hosted alongside the chart. For more information see the Helm Documentation. Defaults to `false`"
+  type        = bool
+  default     = null
+}
+
+variable "auth_keyring" {
+  description = "Location of public keys used for verification. Used only if verify is true. Defaults to `/.gnupg/pubring.gpg` in the location set by `home`"
+  type        = string
+  default     = null
+}
+
+variable "auth_disable_webhooks" {
+  description = "Prevent hooks from running. Defaults to `false`"
+  type        = bool
+  default     = null
+}
+
+variable "auth_reuse_values" {
+  description = "When upgrading, reuse the last release's values and merge in any overrides. If `reset_values` is specified, this is ignored. Defaults to `false`"
+  type        = bool
+  default     = null
+}
+
+variable "auth_reset_values" {
+  description = "When upgrading, reset the values to the ones built into the chart. Defaults to `false`"
+  type        = bool
+  default     = true
+}
+
+variable "auth_force_update" {
+  description = "Force resource update through delete/recreate if needed. Defaults to `false`"
+  type        = bool
+  default     = null
+}
+
+variable "auth_recreate_pods" {
+  description = "Perform pods restart during upgrade/rollback. Defaults to `false`"
+  type        = bool
+  default     = null
+}
+
+variable "auth_cleanup_on_fail" {
+  description = "Allow deletion of new resources created in this upgrade when upgrade fails. Defaults to `false`"
+  type        = bool
+  default     = null
+}
+
+variable "auth_max_history" {
+  description = "Maximum number of release versions stored per release. Defaults to `0` (no limit)"
+  type        = number
+  default     = null
+}
+
+variable "auth_atomic" {
+  description = "If set, installation process purges chart on fail. The wait flag will be set automatically if atomic is used. Defaults to `false`"
+  type        = bool
+  default     = null
+}
+
+variable "auth_skip_crds" {
+  description = "If set, no CRDs will be installed. By default, CRDs are installed if not already present. Defaults to `false`"
+  type        = bool
+  default     = null
+}
+
+variable "auth_render_subchart_notes" {
+  description = "If set, render subchart notes along with the parent. Defaults to `true`"
+  type        = bool
+  default     = null
+}
+
+variable "auth_disable_openapi_validation" {
+  description = "If set, the installation process will not validate rendered templates against the Kubernetes OpenAPI Schema. Defaults to `false`"
+  type        = bool
+  default     = null
+}
+
+variable "auth_wait" {
+  description = "Will wait until all resources are in a ready state before marking the release as successful. If set to `true`, it will wait for as long as `timeout`. If set to `null` fallback on `300s` timeout.  Defaults to `false`"
+  type        = bool
+  default     = false
+}
+
+variable "auth_wait_for_jobs" {
+  description = "If wait is enabled, will wait until all Jobs have been completed before marking the release as successful. It will wait for as long as `timeout`. Defaults to `false`"
+  type        = bool
+  default     = null
+}
+
+variable "auth_dependency_update" {
+  description = "Runs helm dependency update before installing the chart. Defaults to `false`"
+  type        = bool
+  default     = null
+}
+
+variable "auth_replace" {
+  description = "Re-use the given name, only if that name is a deleted release which remains in the history. This is unsafe in production. Defaults to `false`"
+  type        = bool
+  default     = null
+}
+
+variable "auth_lint" {
+  description = "Run the helm chart linter during the plan. Defaults to `false`"
+  type        = bool
+  default     = null
+}
+
+variable "auth_postrender" {
+  description = "Configure a command to run after helm renders the manifest which can alter the manifest contents"
+  type        = any
+  default     = {}
+}
+
+variable "auth_set" {
+  description = "Value block with custom values to be merged with the values yaml"
+  type        = any
+  default     = []
+}
+
+variable "auth_set_sensitive" {
+  description = "Value block with custom sensitive values to be merged with the values yaml that won't be exposed in the plan's diff"
+  type        = any
+  default     = []
+}
+
+variable "auth_set_irsa_names" {
+  description = "Value annotations name where IRSA role ARN created by module will be assigned to the `value`"
+  type        = list(string)
+  default     = []
+}
+

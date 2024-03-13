@@ -20,7 +20,26 @@ resource "random_password" "grafana_admin_password" {
   special          = true
 }
 
+data "kubernetes_namespace" "grafana" {
+  metadata {
+    name = var.namespace
+  }
+}
+
+resource "kubernetes_namespace" "grafana" {
+  count = var.create_namespace && ! (length(data.kubernetes_namespace.grafana) > 0) ? 1 : 0
+
+  metadata {
+    name = var.namespace
+  }
+}
+
 resource "kubernetes_secret" "grafana_admin_credentials" {
+
+  depends_on = [
+    kubernetes_namespace.grafana
+  ]
+
   metadata {
     generate_name = "grafana-admin-credentials"
     namespace     = var.namespace
@@ -35,6 +54,10 @@ resource "kubernetes_secret" "grafana_admin_credentials" {
 resource "kubernetes_secret" "grafana_operator_integration_credentials" {
   count = var.grafana_operator_integration == true ? 1 : 0
 
+  depends_on = [
+    kubernetes_namespace.grafana
+  ]
+
   metadata {
     generate_name = "grafana-${var.namespace}-integration-credentials"
     namespace     = var.grafana_operator_namespace
@@ -47,33 +70,71 @@ resource "kubernetes_secret" "grafana_operator_integration_credentials" {
 }
 
 # https://grafana.github.io/grafana-operator/docs/grafana/#external-grafana-instances
-resource "kubernetes_manifest" "grafana_operator_integration" {
+# resource "kubernetes_manifest" "grafana_operator_integration" {
+#   count = var.grafana_operator_integration == true ? 1 : 0
+# 
+#   manifest = {
+#     apiVersion = "grafana.integreatly.org/v1beta1"
+#     kind = "Grafana"
+#     metadata = {
+#       name = "grafana-${var.namespace}"
+#       namespace = var.namespace
+#       labels = {
+#         dashboards = "grafana"
+#       }
+#     }
+#     spec = {
+#       external = {
+#         url = "http://${module.grafana.name}.${module.grafana.namespace}.svc.cluster.local"
+#         adminPassword = {
+#           name = "${kubernetes_secret.grafana_operator_integration_credentials[0].metadata[0].name}"
+#           key = "password"
+#         }
+#         adminUser = {
+#           name = "${kubernetes_secret.grafana_operator_integration_credentials[0].metadata[0].name}"
+#           key = "username"
+#         }
+#       }
+#     }
+#   }
+# }
+
+# https://grafana.github.io/grafana-operator/docs/grafana/#external-grafana-instances
+module "kubernetes_manifests" {
+  source = "../kubernetes-manifests"
   count = var.grafana_operator_integration == true ? 1 : 0
 
-  manifest = {
-    apiVersion = "grafana.integreatly.org/v1beta1"
-    kind = "Grafana"
-    metadata = {
-      name = "grafana-${var.namespace}"
-      namespace = var.namespace
-      labels = {
-        dashboards = "grafana"
-      }
-    }
-    spec = {
-      external = {
-        url = "http://${module.grafana.name}.${module.grafana.namespace}.svc.cluster.local"
-        adminPassword = {
-          name = "${kubernetes_secret.grafana_operator_integration_credentials[0].metadata[0].name}"
-          key = "password"
-        }
-        adminUser = {
-          name = "${kubernetes_secret.grafana_operator_integration_credentials[0].metadata[0].name}"
-          key = "username"
-        }
-      }
-    }
-  }
+#   depends_on = [
+#     module.grafana,
+#     kubernetes_secret.grafana_operator_integration_credentials
+#   ]
+
+  name          = "grafana-${var.namespace}-integration"
+  namespace     = var.grafana_operator_namespace
+  tags          = var.tags
+
+  values = [
+    <<-EOT
+    resources:
+      - apiVersion: "grafana.integreatly.org/v1beta1"
+        kind: "Grafana"
+        metadata:
+          name: "grafana-${var.namespace}"
+          namespace: "${var.namespace}"
+          labels:
+            dashboards: "grafana"
+        spec:
+          external:
+            url: "http://${module.grafana.name}.${module.grafana.namespace}.svc.cluster.local"
+            adminPassword:
+              name: "${kubernetes_secret.grafana_operator_integration_credentials[0].metadata[0].name}"
+              key: "password"
+            adminUser:
+              name: "${kubernetes_secret.grafana_operator_integration_credentials[0].metadata[0].name}"
+              key: "username"
+    EOT
+  ]
+
 }
 
 module "grafana" {

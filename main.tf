@@ -381,8 +381,8 @@ module "ingress_apisix" {
   count = var.enable_ingress_apisix ? 1 : 0
 
   depends_on = [
-    module.eks,
-    module.addons
+    #module.eks,
+    #module.addons
   ]
 
   create        = var.enable_ingress_apisix
@@ -402,8 +402,8 @@ module "victoriametrics_operator" {
   count = var.enable_victoriametrics_operator ? 1 : 0
 
   depends_on = [
-    module.eks,
-    module.addons
+    #module.eks,
+    #module.addons
   ]
 
   create        = var.enable_victoriametrics_operator
@@ -423,8 +423,8 @@ module "opentelemetry_operator" {
   count = var.enable_opentelemetry_operator ? 1 : 0
 
   depends_on = [
-    module.eks,
-    module.addons
+    #module.eks,
+    #module.addons
   ]
 
   create        = var.enable_opentelemetry_operator
@@ -444,8 +444,8 @@ module "grafana_operator" {
   count = var.enable_grafana_operator ? 1 : 0
 
   depends_on = [
-    module.eks,
-    module.addons
+    #module.eks,
+    #module.addons
   ]
 
   create        = var.enable_grafana_operator
@@ -465,8 +465,8 @@ module "clickhouse_operator" {
   count = var.enable_clickhouse_operator ? 1 : 0
 
   depends_on = [
-    module.eks,
-    module.addons
+    #module.eks,
+    #module.addons
   ]
 
   create        = var.enable_clickhouse_operator
@@ -483,13 +483,91 @@ module "clickhouse_operator" {
 
 # MONITORING
 
+module "victoriametrics" {
+  source = "./modules/victoriametrics"
+  count = var.enable_victoriametrics ? 1 : 0
+
+  depends_on = [
+    #module.eks,
+    #module.addons,
+    module.victoriametrics_operator,
+    module.grafana_operator,
+#     module.uptrace,
+#     module.qryn
+  ]
+
+  create        = var.enable_victoriametrics
+  chart_version = var.victoriametrics_chart_version
+  namespace     = var.victoriametrics_namespace
+  set           = var.victoriametrics_set
+  tags          = var.tags
+
+  grafana_admin_user = var.admin_email
+
+  values = concat(
+    [templatefile("${path.module}/universal_values.yaml", {})],
+    [
+    <<-EOT
+      %{ if var.enable_victoriametrics_operator == true }
+      victoria-metrics-operator:
+        enabled: false
+      crds:
+        enabled: false
+      %{ endif }
+    EOT
+    ,
+    <<-EOT
+      %{ if var.enable_grafana_operator == true || var.enable_grafana == true }
+      grafanaOperatorDashboardsFormat:
+        enabled: true
+        instanceSelector:
+          matchLabels:
+            dashboards: "grafana"
+        allowCrossNamespaceImport: true
+      grafana:
+        enabled: false
+      %{ endif }
+    EOT
+    ,
+    <<-EOT
+      %{ if var.enable_uptrace == true }
+      vmagent:
+        # https://docs.victoriametrics.com/operator/api/#vmagentremotewritespec
+        # https://uptrace.dev/get/ingest/prometheus.html#prometheus-remote-write
+        additionalRemoteWrites:
+          - url: "http://${module.uptrace[0].chart.uptrace}.${module.uptrace[0].namespace.uptrace}.svc.cluster.local:14318/api/v1/prometheus/write"
+            headers:
+              - "uptrace-dsn: http://${module.uptrace[0].project_tokens[1]}@${module.uptrace[0].chart.uptrace}.${module.uptrace[0].namespace.uptrace}.svc.cluster.local:14318/2?grpc=14317"
+      %{ endif }
+    EOT
+    ,
+    <<-EOT
+      %{ if var.enable_qryn == true }
+      vmagent:
+        additionalRemoteWrites:
+          - url: "http://${var.admin_email}:${module.qryn[0].root_password}@${module.qryn[0].chart.qryn}.${module.qryn[0].namespace.qryn}.svc.cluster.local:3100/api/v1/write"
+      %{ endif }
+    EOT
+    ],
+    var.victoriametrics_values
+  )
+
+  auth_chart_version = var.victoriametrics_auth_chart_version
+  auth_set           = var.victoriametrics_auth_set
+  auth_values        = concat(
+    [templatefile("${path.module}/universal_values.yaml", {})],
+    var.victoriametrics_auth_values
+  )
+
+}
+
 module "grafana" {
   source = "./modules/grafana"
   count = var.enable_grafana ? 1 : 0
 
   depends_on = [
-    module.eks,
-    module.addons,
+#     module.eks,
+#     module.addons,
     module.grafana_operator
   ]
 
@@ -517,8 +595,8 @@ module "uptrace" {
   count = var.enable_uptrace ? 1 : 0
 
   depends_on = [
-    module.eks,
-    module.addons
+    #module.eks,
+    #module.addons
   ]
 
   create        = var.enable_uptrace
@@ -557,8 +635,8 @@ module "qryn" {
   count = var.enable_qryn ? 1 : 0
 
   depends_on = [
-    module.eks,
-    module.addons
+    #module.eks,
+    #module.addons
   ]
 
   create        = var.enable_qryn
@@ -591,8 +669,8 @@ module "openobserve" {
   count = var.enable_openobserve ? 1 : 0
 
   depends_on = [
-    module.eks,
-    module.addons
+    #module.eks,
+    #module.addons
   ]
 
   create        = var.enable_openobserve
@@ -616,8 +694,8 @@ module "openobserve_collector" {
   count = var.enable_openobserve_collector ? 1 : 0
 
   depends_on = [
-    module.eks,
-    module.addons,
+    #module.eks,
+    #module.addons,
     module.opentelemetry_operator
   ]
 
@@ -643,8 +721,8 @@ module "kubernetes_dashboard" {
   count = var.enable_kubernetes_dashboard ? 1 : 0
 
   depends_on = [
-    module.eks,
-    module.addons
+    #module.eks,
+    #module.addons
   ]
 
   create        = var.enable_kubernetes_dashboard

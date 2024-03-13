@@ -1,20 +1,3 @@
-variable "zo_root_user_email" {
-  description = "auth.ZO_ROOT_USER_EMAIL helm chart value"
-  type        = string
-}
-
-variable "zo_root_user_password" {
-  description = "auth.ZO_ROOT_USER_PASSWORD helm chart value"
-  type        = string
-  default     = null
-}
-
-variable "create" {
-  description = "Controls if resources should be created (affects all resources)"
-  type        = bool
-  default     = true
-}
-
 variable "tags" {
   description = "A map of tags to add to all resources"
   type        = map(string)
@@ -40,37 +23,19 @@ variable "name" {
 variable "description" {
   description = "Set release description attribute (visible in the history)"
   type        = string
-  default     = "OpenObserve monitoring server"
+  default     = ""
 }
 
 variable "namespace" {
   description = "The namespace to install the release into. Defaults to `default`"
   type        = string
-  default     = "openobserve"
+  default     = "default"
 }
 
 variable "create_namespace" {
   description = "Create the namespace if it does not yet exist. Defaults to `false`"
   type        = bool
   default     = true
-}
-
-variable "chart" {
-  description = "Chart name to be installed. The chart name can be local path, a URL to a chart, or the name of the chart if `repository` is specified"
-  type        = string
-  default     = "openobserve-standalone"
-}
-
-variable "chart_version" {
-  description = "Specify the exact chart version to install. If this is not specified, the latest version is installed"
-  type        = string
-  default     = null
-}
-
-variable "repository" {
-  description = "Repository URL where to locate the requested chart"
-  type        = string
-  default     = "https://charts.openobserve.ai"
 }
 
 variable "values" {
@@ -82,54 +47,6 @@ variable "values" {
 variable "timeout" {
   description = "Time in seconds to wait for any individual kubernetes operation (like Jobs for hooks). Defaults to `300` seconds"
   type        = number
-  default     = null
-}
-
-variable "repository_key_file" {
-  description = "The repositories cert key file"
-  type        = string
-  default     = null
-}
-
-variable "repository_cert_file" {
-  description = "The repositories cert file"
-  type        = string
-  default     = null
-}
-
-variable "repository_ca_file" {
-  description = "The Repositories CA File"
-  type        = string
-  default     = null
-}
-
-variable "repository_username" {
-  description = "Username for HTTP basic authentication against the repository"
-  type        = string
-  default     = null
-}
-
-variable "repository_password" {
-  description = "Password for HTTP basic authentication against the repository"
-  type        = string
-  default     = null
-}
-
-variable "devel" {
-  description = "Use chart development versions, too. Equivalent to version '>0.0.0-0'. If version is set, this is ignored"
-  type        = bool
-  default     = null
-}
-
-variable "verify" {
-  description = "Verify the package before installing it. Helm uses a provenance file to verify the integrity of the chart; this must be hosted alongside the chart. For more information see the Helm Documentation. Defaults to `false`"
-  type        = bool
-  default     = null
-}
-
-variable "keyring" {
-  description = "Location of public keys used for verification. Used only if verify is true. Defaults to `/.gnupg/pubring.gpg` in the location set by `home`"
-  type        = string
   default     = null
 }
 
@@ -211,12 +128,6 @@ variable "wait_for_jobs" {
   default     = null
 }
 
-variable "dependency_update" {
-  description = "Runs helm dependency update before installing the chart. Defaults to `false`"
-  type        = bool
-  default     = null
-}
-
 variable "replace" {
   description = "Re-use the given name, only if that name is a deleted release which remains in the history. This is unsafe in production. Defaults to `false`"
   type        = bool
@@ -246,67 +157,3 @@ variable "set_sensitive" {
   type        = any
   default     = []
 }
-
-variable "set_irsa_names" {
-  description = "Value annotations name where IRSA role ARN created by module will be assigned to the `value`"
-  type        = list(string)
-  default     = []
-}
-
-################################################################################
-# IAM Role for Service Account(s) (IRSA)
-################################################################################
-
-variable "role_path" {
-  description = "Path of IAM role"
-  type        = string
-  default     = "/"
-}
-
-variable "role_permissions_boundary_arn" {
-  description = "Permissions boundary ARN to use for IAM role"
-  type        = string
-  default     = null
-}
-
-variable "role_description" {
-  description = "IAM Role description"
-  type        = string
-  default     = null
-}
-
-variable "role_policies" {
-  description = "Policies to attach to the IAM role in `{'static_name' = 'policy_arn'}` format"
-  type        = map(string)
-  default     = {}
-}
-
-variable "oidc_providers" {
-  description = "Map of OIDC providers where each provider map should contain the `provider_arn`, and `service_accounts`"
-  type        = any
-  default     = {}
-}
-
-variable "oidc_provider_arn" {
-  description = "OIDC provider arn for mapping openobserve role with service account"
-  type        = string
-}
-
-variable "max_session_duration" {
-  description = "Maximum CLI/API session duration in seconds between 3600 and 43200"
-  type        = number
-  default     = null
-}
-
-variable "assume_role_condition_test" {
-  description = "Name of the [IAM condition operator](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_condition_operators.html) to evaluate when assuming the role"
-  type        = string
-  default     = "StringEquals"
-}
-
-variable "allow_self_assume_role" {
-  description = "Determines whether to allow the role to be [assume itself](https://aws.amazon.com/blogs/security/announcing-an-update-to-iam-role-trust-policy-behavior/)"
-  type        = bool
-  default     = false
-}
-

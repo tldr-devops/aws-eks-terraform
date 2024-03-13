@@ -148,7 +148,7 @@ variable "reuse_values" {
 variable "reset_values" {
   description = "When upgrading, reset the values to the ones built into the chart. Defaults to `false`"
   type        = bool
-  default     = null
+  default     = true
 }
 
 variable "force_update" {
@@ -425,7 +425,7 @@ variable "clickhouse_disable_webhooks" {
 variable "clickhouse_reuse_values" {
   description = "When upgrading, reuse the last release's values and merge in any overrides. If `reset_values` is specified, this is ignored. Defaults to `false`"
   type        = bool
-  default     = null
+  default     = true
 }
 
 variable "clickhouse_reset_values" {
@@ -651,7 +651,7 @@ variable "postgresql_disable_webhooks" {
 variable "postgresql_reuse_values" {
   description = "When upgrading, reuse the last release's values and merge in any overrides. If `reset_values` is specified, this is ignored. Defaults to `false`"
   type        = bool
-  default     = null
+  default     = true
 }
 
 variable "postgresql_reset_values" {

@@ -137,7 +137,7 @@ variable "reuse_values" {
 variable "reset_values" {
   description = "When upgrading, reset the values to the ones built into the chart. Defaults to `false`"
   type        = bool
-  default     = null
+  default     = true
 }
 
 variable "force_update" {
@@ -485,7 +485,7 @@ variable "prometheus_operator_crds_reuse_values" {
 variable "prometheus_operator_crds_reset_values" {
   description = "When upgrading, reset the values to the ones built into the chart. Defaults to `false`"
   type        = bool
-  default     = null
+  default     = true
 }
 
 variable "prometheus_operator_crds_force_update" {

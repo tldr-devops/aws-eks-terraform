@@ -151,8 +151,9 @@ module "eks" {
   enable_opentelemetry_operator   = true
   enable_clickhouse_operator      = true
   enable_grafana_operator         = true
+  enable_victoriametrics          = true
   enable_grafana                  = true
-  enable_uptrace                  = false
+  enable_uptrace                  = true
   enable_qryn                     = false
   enable_openobserve              = false
   enable_openobserve_collector    = false

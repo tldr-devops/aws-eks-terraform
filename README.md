@@ -21,6 +21,10 @@ terraform apply
 terraform output output
 ```
 
+## Upgrading process
+
+Helm upgrade `reset_values` flag set to `true` for everything except databases like postgresql and clickhouse, see this [explain](https://shipmight.com/blog/understanding-helm-upgrade-reset-reuse-values)
+
 ## Variables
 
 ## Outputs
