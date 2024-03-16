@@ -43,7 +43,7 @@ locals {
           enabled: true
           size: 1Gi
         admin:
-          existingSecret: "${kubernetes_secret.grafana_admin_credentials.metadata[0].name}"
+          existingSecret: "victoriametrics-grafana-admin-credentials"
           userKey: username
           passwordKey: password
     EOT
@@ -56,7 +56,7 @@ locals {
     <<-EOT
       serviceMonitor:
         enabled: true
-      secretName: "${kubernetes_secret.auth_config.metadata[0].name}"
+      secretName: "victoriametrics-auth-config"
     EOT
   ]
   auth_set = []
@@ -73,125 +73,39 @@ resource "random_password" "auth_vmagent_rw_password" {
   special          = true
 }
 
-data "kubernetes_namespace" "victoriametrics" {
-  metadata {
-    name = var.namespace
-  }
-}
-
-resource "kubernetes_namespace" "victoriametrics" {
-  count = var.create_namespace && ! (length(data.kubernetes_namespace.victoriametrics) > 0) ? 1 : 0
-
-  metadata {
-    name = var.namespace
-  }
-}
-
-resource "kubernetes_secret" "grafana_admin_credentials" {
-
-  depends_on = [
-    kubernetes_namespace.victoriametrics
-  ]
-
-  metadata {
-    generate_name = "victoriametrics-grafana-admin-credentials"
-    namespace     = var.namespace
-  }
-
-  data = {
-    username = var.grafana_admin_user
-    password = local.grafana_admin_password
-  }
-}
-
-resource "kubernetes_secret" "auth_config" {
-
-  depends_on = [
-    kubernetes_namespace.victoriametrics,
-    module.victoriametrics,
-    random_password.auth_vmagent_rw_password
-  ]
-
-  metadata {
-    generate_name = "victoriametrics-auth-config"
-    namespace     = var.namespace
-  }
-
-  data = {
-    # https://docs.victoriametrics.com/vmauth/
-    "auth.yml" = <<-EOT
-      users:
-        - username: "${local.auth_vmagent_rw_user}"
-          password: "${local.auth_vmagent_rw_password}"
-          url_prefix: "http://vmagent-${module.victoriametrics.chart}:8429/"
-      EOT
-  }
-}
-
-# resource "kubernetes_secret" "grafana_operator_datasource_credentials" {
-#   count = var.grafana_operator_integration == true ? 1 : 0
-# 
-#   metadata {
-#     generate_name = "victoriametrics-${var.namespace}-datasource-credentials"
-#     namespace     = var.grafana_operator_namespace
-#   }
-# 
-#   data = {
-#     username = local.auth_vmagent_rw_user
-#     password = local.auth_vmagent_rw_password
-#   }
-# }
-
-# https://grafana.github.io/grafana-operator/docs/datasources/
 module "kubernetes_manifests" {
   source = "../kubernetes-manifests"
-  count = var.grafana_operator_integration == true ? 1 : 0
 
-  name          = "victoriametrics-${var.namespace}-datasource"
-  namespace     = var.grafana_operator_namespace
+  create        = var.create
+  name          = "victoriametrics-${var.namespace}-manifests"
+  namespace     = var.namespace
   tags          = var.tags
 
   values = [
     <<-EOT
     resources:
-      - apiVersion: grafana.integreatly.org/v1beta1
-        kind: GrafanaDatasource
+      - kind: Secret
+        apiVersion: v1
         metadata:
-          name: "victoriametrics-single-${var.namespace}-datasource"
-        spec:
-          instanceSelector:
-            matchLabels:
-              dashboards: "grafana"
-          datasource:
-            name: "VictoriaMetrics-Single-${var.namespace}"
-            type: prometheus
-            access: proxy
-            basicAuth: false
-            url: "http://vmsingle-${module.victoriametrics.chart}.${module.victoriametrics.namespace}.svc:8429/"
-            isDefault: false
-            jsonData:
-              "tlsSkipVerify": true
-              "timeInterval": "5s"
-            editable: true
-      - apiVersion: grafana.integreatly.org/v1beta1
-        kind: GrafanaDatasource
+          name: "victoriametrics-grafana-admin-credentials"
+          namespace: "${var.namespace}"
+        stringData:
+          username: "${var.grafana_admin_user}"
+          password: "${local.grafana_admin_password}"
+        type: Opaque
+      - kind: Secret
+        apiVersion: v1
         metadata:
-          name: "victoriametrics-cluster-${var.namespace}-datasource"
-        spec:
-          instanceSelector:
-            matchLabels:
-              dashboards: "grafana"
-          datasource:
-            name: "VictoriaMetrics-Cluster-${var.namespace}"
-            type: prometheus
-            access: proxy
-            basicAuth: false
-            url: "http://vmselect-${module.victoriametrics.chart}.${module.victoriametrics.namespace}.svc:8481"
-            isDefault: false
-            jsonData:
-              "tlsSkipVerify": true
-              "timeInterval": "5s"
-            editable: true
+          name: "victoriametrics-auth-config"
+          namespace: "${var.namespace}"
+        stringData:
+          # https://docs.victoriametrics.com/vmauth/
+          "auth.yml": |
+            users:
+              - username: "${local.auth_vmagent_rw_user}"
+                password: "${local.auth_vmagent_rw_password}"
+                url_prefix: "http://vmagent-${module.victoriametrics.chart}:8429/"
+        type: Opaque
     EOT
   ]
 }
@@ -199,6 +113,10 @@ module "kubernetes_manifests" {
 module "victoriametrics" {
   source = "aws-ia/eks-blueprints-addon/aws"
   version = "~> 1.1"
+
+  depends_on = [
+    #module.kubernetes_manifests
+  ]
 
   set = var.set
 
@@ -272,7 +190,7 @@ module "auth" {
 
   depends_on = [
     #module.victoriametrics,
-    #kubernetes_secret.auth_config
+    #module.kubernetes_manifests
   ]
 
   set = var.auth_set
@@ -320,4 +238,58 @@ module "auth" {
   postrender = var.auth_postrender
   set_sensitive = var.auth_set_sensitive
   set_irsa_names = var.auth_set_irsa_names
+}
+
+# https://grafana.github.io/grafana-operator/docs/datasources/
+module "grafana_operator_datasource" {
+  source = "../kubernetes-manifests"
+  count = var.grafana_operator_integration == true ? 1 : 0
+
+  name          = "victoriametrics-${var.namespace}-datasource"
+  namespace     = var.grafana_operator_namespace
+  tags          = var.tags
+
+  values = [
+    <<-EOT
+    resources:
+      - apiVersion: grafana.integreatly.org/v1beta1
+        kind: GrafanaDatasource
+        metadata:
+          name: "victoriametrics-single-${var.namespace}-datasource"
+        spec:
+          instanceSelector:
+            matchLabels:
+              dashboards: "grafana"
+          datasource:
+            name: "VictoriaMetrics-Single-${var.namespace}"
+            type: prometheus
+            access: proxy
+            basicAuth: false
+            url: "http://vmsingle-${module.victoriametrics.chart}.${module.victoriametrics.namespace}.svc:8429/"
+            isDefault: false
+            jsonData:
+              "tlsSkipVerify": true
+              "timeInterval": "5s"
+            editable: true
+      - apiVersion: grafana.integreatly.org/v1beta1
+        kind: GrafanaDatasource
+        metadata:
+          name: "victoriametrics-cluster-${var.namespace}-datasource"
+        spec:
+          instanceSelector:
+            matchLabels:
+              dashboards: "grafana"
+          datasource:
+            name: "VictoriaMetrics-Cluster-${var.namespace}"
+            type: prometheus
+            access: proxy
+            basicAuth: false
+            url: "http://vmselect-${module.victoriametrics.chart}.${module.victoriametrics.namespace}.svc:8481"
+            isDefault: false
+            jsonData:
+              "tlsSkipVerify": true
+              "timeInterval": "5s"
+            editable: true
+    EOT
+  ]
 }

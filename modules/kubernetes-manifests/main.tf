@@ -4,6 +4,7 @@ module "kubernetes_manifests" {
 
   chart = "${path.module}/chart"
 
+  create = var.create
   tags = var.tags
   create_release = var.create_release
   name = var.name

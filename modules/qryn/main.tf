@@ -45,7 +45,7 @@ locals {
       replicaCount: 1
       auth:
         username: default
-        existingSecret: "${kubernetes_secret.clickhouse_password.metadata[0].name}"
+        existingSecret: "qryn-clickhouse-password"
         existingSecretKey: "password"
       persistence:
         size: 5Gi
@@ -102,34 +102,27 @@ resource "random_password" "clickhouse_password" {
   special          = false
 }
 
-data "kubernetes_namespace" "qryn" {
-  metadata {
-    name = var.namespace
-  }
-}
+module "kubernetes_manifests" {
+  source = "../kubernetes-manifests"
 
-resource "kubernetes_namespace" "qryn" {
-  count = var.create_namespace && ! (length(data.kubernetes_namespace.qryn) > 0) ? 1 : 0
+  create        = var.create
+  name          = "qryn-${var.namespace}-manifests"
+  namespace     = var.namespace
+  tags          = var.tags
 
-  metadata {
-    name = var.namespace
-  }
-}
-
-resource "kubernetes_secret" "clickhouse_password" {
-
-  depends_on = [
-    kubernetes_namespace.qryn
+  values = [
+    <<-EOT
+    resources:
+      - kind: Secret
+        apiVersion: v1
+        metadata:
+          name: "qryn-clickhouse-password"
+          namespace: "${var.namespace}"
+        stringData:
+          password: "${random_password.clickhouse_password.result}"
+        type: Opaque
+    EOT
   ]
-
-  metadata {
-    generate_name = "qryn-clickhouse-password"
-    namespace     = var.namespace
-  }
-
-  data = {
-    password = random_password.clickhouse_password.result
-  }
 }
 
 # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket
@@ -224,69 +217,6 @@ module "role" {
 
   create = var.create
   tags = var.tags
-}
-
-resource "kubernetes_secret" "grafana_operator_datasource_credentials" {
-  count = var.grafana_operator_integration == true ? 1 : 0
-
-  metadata {
-    generate_name = "qryn-${var.namespace}-datasource-credentials"
-    namespace     = var.grafana_operator_namespace
-  }
-
-  data = {
-    username = local.root_user
-    password = local.root_password
-  }
-}
-
-# https://grafana.github.io/grafana-operator/docs/datasources/
-module "kubernetes_manifests" {
-  source = "../kubernetes-manifests"
-  count = var.grafana_operator_integration == true ? 1 : 0
-
-  name          = "qryn-${var.namespace}-datasource"
-  namespace     = var.grafana_operator_namespace
-  tags          = var.tags
-
-  values = [
-    <<-EOT
-    resources:
-      - apiVersion: grafana.integreatly.org/v1beta1
-        kind: GrafanaDatasource
-        metadata:
-          name: "qryn-${var.namespace}-datasource"
-        spec:
-          valuesFrom:
-            - targetPath: "user"
-              valueFrom:
-                secretKeyRef:
-                  name: "${kubernetes_secret.grafana_operator_datasource_credentials[0].metadata[0].name}"
-                  key: "username"
-            - targetPath: "secureJsonData.password"
-              valueFrom:
-                secretKeyRef:
-                  name: "${kubernetes_secret.grafana_operator_datasource_credentials[0].metadata[0].name}"
-                  key: "password"
-          instanceSelector:
-            matchLabels:
-              dashboards: "grafana"
-          datasource:
-            name: "Qryn-${var.namespace}"
-            type: prometheus
-            access: proxy
-            basicAuth: true
-            url: "http://${module.qryn.chart.qryn}.${module.qryn.namespace.qryn}.svc:3100"
-            isDefault: false
-            user: "$${username}"
-            jsonData:
-              "tlsSkipVerify": true
-              "timeInterval": "5s"
-            secureJsonData:
-              "password": "$${password}" # Notice the brakes around
-            editable: true
-    EOT
-  ]
 }
 
 module "clickhouse" {
@@ -405,101 +335,60 @@ module "qryn" {
   allow_self_assume_role = var.allow_self_assume_role
 }
 
-# https://medium.com/@danieljimgarcia/dont-use-the-terraform-kubernetes-manifest-resource-6c7ff4fe629a
-# https://github.com/Altinity/clickhouse-operator/tree/master/docs/chi-examples
-# resource "kubernetes_manifest" "qryn_clickhouse" {
-#   manifest = yamldecode(<<-EOF
-#     ---
-#     apiVersion: v1
-#     kind: ServiceAccount
-#     metadata:
-#       name: ${local.service_account}
-#       namespace: ${var.namespace}
-#       annotations:
-#         eks.amazonaws.com/role-arn: ${module.role.iam_role_arn}
-#     ---
-#     apiVersion: "clickhouse.altinity.com/v1"
-#     kind: "ClickHouseInstallation"
-#     metadata:
-#       name: qryn
-#       namespace: ${var.namespace}
-#     spec:
-#       configuration:
-#     #    zookeeper:
-#     #        nodes:
-#     #        - host: zookeeper.zoo1ns
-#     #          port: 2181
-#         files:
-#           # https://kb.altinity.com/altinity-kb-setup-and-maintenance/altinity-kb-s3-object-storage/aws-s3-recipes/
-#           # https://clickhouse.com/docs/en/integrations/s3
-#           config.d/s3.xml: |
-#             <clickhouse>
-#               <storage_configuration>
-#                   <disks>
-#                       <disk_s3>
-#                           <type>s3</type>
-#                           <endpoint>${aws_s3_bucket.qryn.bucket_regional_domain_name}/qryn/</endpoint>
-#                           <use_environment_credentials>true</use_environment_credentials>
-#                       </disk_s3>
-#                       <s3_cache>
-#                         <type>cache</type>
-#                         <disk>s3_disk</disk>
-#                         <path>/var/lib/clickhouse/disks/s3_cache/</path>
-#                         <max_size>4Gi</max_size>
-#                       </s3_cache>
-#                   </disks>
-#                   <policies>
-#                       <policy_s3_only>
-#                           <volumes>
-#                               <volume_s3>
-#                                   <disk>disk_s3</disk>
-#                               </volume_s3>
-#                           </volumes>
-#                       </policy_s3_only>
-#                   </policies>
-#               </storage_configuration>
-#             </clickhouse>
-#         users:
-#           default/password: ${random_password.clickhouse_password.result}
-#         clusters:
-#           - name: "clickhouse-qryn"
-#             layout:
-#               shardsCount: 1
-#               replicasCount: 1
-#             templates:
-#               podTemplate: clickhouse-qryn
-#               volumeClaimTemplate: clickhouse-qryn-data-volume
-#               serviceTemplate: clickhouse-qryn-service
-#       templates:
-#         serviceTemplates:
-#           - name: clickhouse-qryn-service
-#             generateName: clickhouse-qryn
-#             spec:
-#               ports:
-#                 - name: http
-#                   port: 8123
-#                 - name: tcp
-#                   port: 9000
-#               type: ClusterIP
-#         podTemplates:
-#           - name: clickhouse-qryn
-#             spec:
-#               serviceAccountName: ${local.service_account}
-#               containers:
-#                 - name: clickhouse
-#                   image: clickhouse/clickhouse-server:latest
-#               volumeMounts:
-#                 - mountPath: "/var/lib/clickhouse"
-#                   name: clickhouse-qryn-data-volume
-#         volumeClaimTemplates:
-#           - name: clickhouse-qryn-data-volume
-#             spec:
-#               storageClassName: standard
-#               accessModes:
-#                 - ReadWriteOnce
-#               resources:
-#                 requests:
-#                   storage: 5Gi
-#     EOF
-#   )
-# }
+# https://grafana.github.io/grafana-operator/docs/datasources/
+module "grafana_operator_datasource" {
+  source = "../kubernetes-manifests"
+  count = var.grafana_operator_integration == true ? 1 : 0
+
+  name          = "qryn-${var.namespace}-datasource"
+  namespace     = var.grafana_operator_namespace
+  tags          = var.tags
+
+  values = [
+    <<-EOT
+    resources:
+      - kind: Secret
+        apiVersion: v1
+        metadata:
+          name: "qryn-${var.namespace}-datasource-credentials"
+          namespace: "${var.grafana_operator_namespace}"
+        stringData:
+          username: "${local.root_user}"
+          password: "${local.root_password}"
+        type: Opaque
+      - apiVersion: grafana.integreatly.org/v1beta1
+        kind: GrafanaDatasource
+        metadata:
+          name: "qryn-${var.namespace}-datasource"
+        spec:
+          valuesFrom:
+            - targetPath: "user"
+              valueFrom:
+                secretKeyRef:
+                  name: "qryn-${var.namespace}-datasource-credentials"
+                  key: "username"
+            - targetPath: "secureJsonData.password"
+              valueFrom:
+                secretKeyRef:
+                  name: "qryn-${var.namespace}-datasource-credentials"
+                  key: "password"
+          instanceSelector:
+            matchLabels:
+              dashboards: "grafana"
+          datasource:
+            name: "Qryn-${var.namespace}"
+            type: prometheus
+            access: proxy
+            basicAuth: true
+            url: "http://${module.qryn.chart.qryn}.${module.qryn.namespace.qryn}.svc:3100"
+            isDefault: false
+            user: "$${username}"
+            jsonData:
+              "tlsSkipVerify": true
+              "timeInterval": "5s"
+            secureJsonData:
+              "password": "$${password}" # Notice the brakes around
+            editable: true
+    EOT
+  ]
+}
