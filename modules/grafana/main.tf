@@ -54,10 +54,6 @@ resource "kubernetes_secret" "grafana_admin_credentials" {
 resource "kubernetes_secret" "grafana_operator_integration_credentials" {
   count = var.grafana_operator_integration == true ? 1 : 0
 
-  depends_on = [
-    kubernetes_namespace.grafana
-  ]
-
   metadata {
     generate_name = "grafana-${var.namespace}-integration-credentials"
     namespace     = var.grafana_operator_namespace

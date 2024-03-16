@@ -16,6 +16,18 @@ variable "auth_vmagent_rw_password" {
   default     = null
 }
 
+variable "grafana_operator_integration" {
+  description = "Controls if Grafana instance should be connected to Grafana Operator"
+  type        = bool
+  default     = false
+}
+
+variable "grafana_operator_namespace" {
+  description = "Grafana Operator namespace"
+  type        = string
+  default     = null
+}
+
 variable "create" {
   description = "Controls if resources should be created (affects all resources)"
   type        = bool

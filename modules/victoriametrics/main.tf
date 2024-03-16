@@ -128,6 +128,74 @@ resource "kubernetes_secret" "auth_config" {
   }
 }
 
+# resource "kubernetes_secret" "grafana_operator_datasource_credentials" {
+#   count = var.grafana_operator_integration == true ? 1 : 0
+# 
+#   metadata {
+#     generate_name = "victoriametrics-${var.namespace}-datasource-credentials"
+#     namespace     = var.grafana_operator_namespace
+#   }
+# 
+#   data = {
+#     username = local.auth_vmagent_rw_user
+#     password = local.auth_vmagent_rw_password
+#   }
+# }
+
+# https://grafana.github.io/grafana-operator/docs/datasources/
+module "kubernetes_manifests" {
+  source = "../kubernetes-manifests"
+  count = var.grafana_operator_integration == true ? 1 : 0
+
+  name          = "victoriametrics-${var.namespace}-datasource"
+  namespace     = var.grafana_operator_namespace
+  tags          = var.tags
+
+  values = [
+    <<-EOT
+    resources:
+      - apiVersion: grafana.integreatly.org/v1beta1
+        kind: GrafanaDatasource
+        metadata:
+          name: "victoriametrics-single-${var.namespace}-datasource"
+        spec:
+          instanceSelector:
+            matchLabels:
+              dashboards: "grafana"
+          datasource:
+            name: "VictoriaMetrics-Single-${var.namespace}"
+            type: prometheus
+            access: proxy
+            basicAuth: false
+            url: "http://vmsingle-${module.victoriametrics.chart}.${module.victoriametrics.namespace}.svc:8429/"
+            isDefault: false
+            jsonData:
+              "tlsSkipVerify": true
+              "timeInterval": "5s"
+            editable: true
+      - apiVersion: grafana.integreatly.org/v1beta1
+        kind: GrafanaDatasource
+        metadata:
+          name: "victoriametrics-cluster-${var.namespace}-datasource"
+        spec:
+          instanceSelector:
+            matchLabels:
+              dashboards: "grafana"
+          datasource:
+            name: "VictoriaMetrics-Cluster-${var.namespace}"
+            type: prometheus
+            access: proxy
+            basicAuth: false
+            url: "http://vmselect-${module.victoriametrics.chart}.${module.victoriametrics.namespace}.svc:8481"
+            isDefault: false
+            jsonData:
+              "tlsSkipVerify": true
+              "timeInterval": "5s"
+            editable: true
+    EOT
+  ]
+}
+
 module "victoriametrics" {
   source = "aws-ia/eks-blueprints-addon/aws"
   version = "~> 1.1"

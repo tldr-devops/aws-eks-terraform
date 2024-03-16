@@ -431,6 +431,144 @@ module "role" {
   tags = var.tags
 }
 
+resource "kubernetes_secret" "grafana_operator_datasource_credentials" {
+  count = var.grafana_operator_integration == true ? length(random_password.uptrace_project_tokens) : 0
+
+  metadata {
+    generate_name = "uptrace-${var.namespace}-datasource-credentials-${count.index}"
+    namespace     = var.grafana_operator_namespace
+  }
+
+  data = {
+    token = random_password.uptrace_project_tokens[count.index].result
+    header = "http://${random_password.uptrace_project_tokens[count.index].result}@${module.uptrace.chart.uptrace}.${module.uptrace.namespace.uptrace}.svc:14318/${count.index + 1}?grpc=14317"
+  }
+}
+
+# https://grafana.github.io/grafana-operator/docs/datasources/
+module "kubernetes_manifests" {
+  source = "../kubernetes-manifests"
+  count = var.grafana_operator_integration == true ? 1 : 0
+
+  name          = "uptrace-${var.namespace}-datasource"
+  namespace     = var.grafana_operator_namespace
+  tags          = var.tags
+
+  values = [
+    <<-EOT
+    resources:
+      - apiVersion: grafana.integreatly.org/v1beta1
+        kind: GrafanaDatasource
+        metadata:
+          name: "uptrace-${var.namespace}-uptrace-prometheus-datasource"
+        spec:
+          valuesFrom:
+            - targetPath: "secureJsonData.httpHeaderValue1"
+              valueFrom:
+                secretKeyRef:
+                  name: "${kubernetes_secret.grafana_operator_datasource_credentials[0].metadata[0].name}"
+                  key: "header"
+          instanceSelector:
+            matchLabels:
+              dashboards: "grafana"
+          datasource:
+            name: "Uptrace-${var.namespace}"
+            type: prometheus
+            access: proxy
+            url: "http://${module.uptrace.chart.uptrace}.${module.uptrace.namespace.uptrace}.svc:14318/api/prometheus"
+            isDefault: false
+            jsonData:
+              "httpHeaderName1": "uptrace-dsn"
+              "tlsSkipVerify": true
+              "timeInterval": "5s"
+            secureJsonData:
+              "httpHeaderValue1": "$${header}" # Notice the brakes around
+            editable: true
+      - apiVersion: grafana.integreatly.org/v1beta1
+        kind: GrafanaDatasource
+        metadata:
+          name: "uptrace-${var.namespace}-uptrace-tempo-datasource"
+        spec:
+          valuesFrom:
+            - targetPath: "secureJsonData.httpHeaderValue1"
+              valueFrom:
+                secretKeyRef:
+                  name: "${kubernetes_secret.grafana_operator_datasource_credentials[0].metadata[0].name}"
+                  key: "header"
+          instanceSelector:
+            matchLabels:
+              dashboards: "grafana"
+          datasource:
+            name: "Uptrace-Tempo-${var.namespace}"
+            type: tempo
+            access: proxy
+            url: "http://${module.uptrace.chart.uptrace}.${module.uptrace.namespace.uptrace}.svc:14318/api/tempo"
+            isDefault: false
+            jsonData:
+              "httpHeaderName1": "uptrace-dsn"
+              "tlsSkipVerify": true
+              "timeInterval": "5s"
+            secureJsonData:
+              "httpHeaderValue1": "$${header}" # Notice the brakes around
+            editable: true
+      - apiVersion: grafana.integreatly.org/v1beta1
+        kind: GrafanaDatasource
+        metadata:
+          name: "uptrace-${var.namespace}-monitoring-prometheus-datasource"
+        spec:
+          valuesFrom:
+            - targetPath: "secureJsonData.httpHeaderValue1"
+              valueFrom:
+                secretKeyRef:
+                  name: "${kubernetes_secret.grafana_operator_datasource_credentials[1].metadata[0].name}"
+                  key: "header"
+          instanceSelector:
+            matchLabels:
+              dashboards: "grafana"
+          datasource:
+            name: "Uptrace-Monitoring-${var.namespace}"
+            type: prometheus
+            access: proxy
+            url: "http://${module.uptrace.chart.uptrace}.${module.uptrace.namespace.uptrace}.svc:14318/api/prometheus"
+            isDefault: false
+            jsonData:
+              "httpHeaderName1": "uptrace-dsn"
+              "tlsSkipVerify": true
+              "timeInterval": "5s"
+            secureJsonData:
+              "httpHeaderValue1": "$${header}" # Notice the brakes around
+            editable: true
+      - apiVersion: grafana.integreatly.org/v1beta1
+        kind: GrafanaDatasource
+        metadata:
+          name: "uptrace-${var.namespace}-monitoring-tempo-datasource"
+        spec:
+          valuesFrom:
+            - targetPath: "secureJsonData.httpHeaderValue1"
+              valueFrom:
+                secretKeyRef:
+                  name: "${kubernetes_secret.grafana_operator_datasource_credentials[1].metadata[0].name}"
+                  key: "header"
+          instanceSelector:
+            matchLabels:
+              dashboards: "grafana"
+          datasource:
+            name: "Uptrace-Monitoring-Tempo-${var.namespace}"
+            type: tempo
+            access: proxy
+            url: "http://${module.uptrace.chart.uptrace}.${module.uptrace.namespace.uptrace}.svc:14318/api/tempo"
+            isDefault: false
+            jsonData:
+              "httpHeaderName1": "uptrace-dsn"
+              "tlsSkipVerify": true
+              "timeInterval": "5s"
+            secureJsonData:
+              "httpHeaderValue1": "$${header}" # Notice the brakes around
+            editable: true
+    EOT
+  ]
+}
+
 module "clickhouse" {
   source = "aws-ia/eks-blueprints-addon/aws"
   version = "~> 1.1"

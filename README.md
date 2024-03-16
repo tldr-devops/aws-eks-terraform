@@ -21,6 +21,10 @@ terraform apply
 terraform output output
 ```
 
+## Security
+
+`victoria-metrics-k8s-stack` deployed without internal password protection. Multiple charts such as `apisix`, `qryn` and `uptrace` contain explicit passwords in the values and do not use k8s secrets.
+
 ## Upgrading process
 
 Helm upgrade `reset_values` flag set to `true` for everything except databases like postgresql and clickhouse, see this [explain](https://shipmight.com/blog/understanding-helm-upgrade-reset-reuse-values)

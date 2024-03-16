@@ -503,6 +503,8 @@ module "victoriametrics" {
   tags          = var.tags
 
   grafana_admin_user = var.admin_email
+  grafana_operator_integration  = var.enable_grafana_operator
+  grafana_operator_namespace    = var.grafana_operator_namespace
 
   values = concat(
     [templatefile("${path.module}/universal_values.yaml", {})],
@@ -535,9 +537,9 @@ module "victoriametrics" {
         # https://docs.victoriametrics.com/operator/api/#vmagentremotewritespec
         # https://uptrace.dev/get/ingest/prometheus.html#prometheus-remote-write
         additionalRemoteWrites:
-          - url: "http://${module.uptrace[0].chart.uptrace}.${module.uptrace[0].namespace.uptrace}.svc.cluster.local:14318/api/v1/prometheus/write"
+          - url: "http://${module.uptrace[0].chart.uptrace}.${module.uptrace[0].namespace.uptrace}.svc:14318/api/v1/prometheus/write"
             headers:
-              - "uptrace-dsn: http://${module.uptrace[0].project_tokens[1]}@${module.uptrace[0].chart.uptrace}.${module.uptrace[0].namespace.uptrace}.svc.cluster.local:14318/2?grpc=14317"
+              - "uptrace-dsn: http://${module.uptrace[0].project_tokens[1]}@${module.uptrace[0].chart.uptrace}.${module.uptrace[0].namespace.uptrace}.svc:14318/2?grpc=14317"
       %{ endif }
     EOT
     ,
@@ -545,7 +547,7 @@ module "victoriametrics" {
       %{ if var.enable_qryn == true }
       vmagent:
         additionalRemoteWrites:
-          - url: "http://${var.admin_email}:${module.qryn[0].root_password}@${module.qryn[0].chart.qryn}.${module.qryn[0].namespace.qryn}.svc.cluster.local:3100/api/v1/write"
+          - url: "http://${var.admin_email}:${module.qryn[0].root_password}@${module.qryn[0].chart.qryn}.${module.qryn[0].namespace.qryn}.svc:3100/api/v1/write"
       %{ endif }
     EOT
     ],
@@ -587,7 +589,7 @@ module "grafana" {
   )
 }
 
-# signoz.io vs openobserve.ai vs qryn.metrico.in vs uptrace.dev vs skywalking.apache.org
+# signoz.io vs openobserve.ai vs qryn.metrico.in vs uptrace.dev vs skywalking.apache.org vs siglens.com
 # https://uptrace.dev/get/open-source-apm.html#why-not
 
 module "uptrace" {
@@ -607,6 +609,8 @@ module "uptrace" {
 
   root_email    = var.admin_email
   oidc_provider_arn     = module.eks.oidc_provider_arn
+  grafana_operator_integration  = var.enable_grafana_operator
+  grafana_operator_namespace    = var.grafana_operator_namespace
 
   values = concat(
     [templatefile("${path.module}/universal_values.yaml", {})],
@@ -647,6 +651,8 @@ module "qryn" {
 
   root_email    = var.admin_email
   oidc_provider_arn     = module.eks.oidc_provider_arn
+  grafana_operator_integration  = var.enable_grafana_operator
+  grafana_operator_namespace    = var.grafana_operator_namespace
 
   values = concat(
     [templatefile("${path.module}/universal_values.yaml", {})],
@@ -705,7 +711,7 @@ module "openobserve_collector" {
   set           = var.openobserve_collector_set
   tags          = var.tags
 
-  zo_endpoint      = "http://${var.openobserve_chart_name}.${var.openobserve_namespace}.svc.cluster.local:5080/api/default/"
+  zo_endpoint      = "http://${var.openobserve_chart_name}.${var.openobserve_namespace}.svc:5080/api/default/"
   zo_authorization = "Basic ${local.openobserve_authorization}"
 
   values = concat(

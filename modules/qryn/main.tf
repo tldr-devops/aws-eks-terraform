@@ -1,6 +1,7 @@
 data "aws_region" "current" {}
 
 locals {
+  root_user = var.root_email
   root_password = coalesce(var.root_password, random_password.qryn_root_password.result)
 
   # https://github.com/metrico/qryn-helm/blob/main/values.yaml
@@ -24,7 +25,7 @@ locals {
         CLICKHOUSE_AUTH: "default:${random_password.clickhouse_password.result}"
         LABELS_DAYS: "30"
         SAMPLES_DAYS: "30"
-        QRYN_LOGIN: "${var.root_email}"
+        QRYN_LOGIN: "${local.root_user}"
         QRYN_PASSWORD: "${local.root_password}"
         DEBUG: "false"
         LOG_LEVEL: "info"
@@ -223,6 +224,69 @@ module "role" {
 
   create = var.create
   tags = var.tags
+}
+
+resource "kubernetes_secret" "grafana_operator_datasource_credentials" {
+  count = var.grafana_operator_integration == true ? 1 : 0
+
+  metadata {
+    generate_name = "qryn-${var.namespace}-datasource-credentials"
+    namespace     = var.grafana_operator_namespace
+  }
+
+  data = {
+    username = local.root_user
+    password = local.root_password
+  }
+}
+
+# https://grafana.github.io/grafana-operator/docs/datasources/
+module "kubernetes_manifests" {
+  source = "../kubernetes-manifests"
+  count = var.grafana_operator_integration == true ? 1 : 0
+
+  name          = "qryn-${var.namespace}-datasource"
+  namespace     = var.grafana_operator_namespace
+  tags          = var.tags
+
+  values = [
+    <<-EOT
+    resources:
+      - apiVersion: grafana.integreatly.org/v1beta1
+        kind: GrafanaDatasource
+        metadata:
+          name: "qryn-${var.namespace}-datasource"
+        spec:
+          valuesFrom:
+            - targetPath: "user"
+              valueFrom:
+                secretKeyRef:
+                  name: "${kubernetes_secret.grafana_operator_datasource_credentials[0].metadata[0].name}"
+                  key: "username"
+            - targetPath: "secureJsonData.password"
+              valueFrom:
+                secretKeyRef:
+                  name: "${kubernetes_secret.grafana_operator_datasource_credentials[0].metadata[0].name}"
+                  key: "password"
+          instanceSelector:
+            matchLabels:
+              dashboards: "grafana"
+          datasource:
+            name: "Qryn-${var.namespace}"
+            type: prometheus
+            access: proxy
+            basicAuth: true
+            url: "http://${module.qryn.chart.qryn}.${module.qryn.namespace.qryn}.svc:3100"
+            isDefault: false
+            user: "$${username}"
+            jsonData:
+              "tlsSkipVerify": true
+              "timeInterval": "5s"
+            secureJsonData:
+              "password": "$${password}" # Notice the brakes around
+            editable: true
+    EOT
+  ]
 }
 
 module "clickhouse" {
