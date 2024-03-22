@@ -50,6 +50,10 @@ output "openobserve_collector" {
   value       = try(module.openobserve_collector, null)
 }
 
+output "vector_agent" {
+  value       = try(module.vector_agent, null)
+}
+
 output "kubernetes_dashboard" {
   value       = try(module.kubernetes_dashboard, null)
 }

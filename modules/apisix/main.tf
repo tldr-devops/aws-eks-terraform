@@ -4,12 +4,12 @@
 
 resource "random_password" "apisix_admin_key" {
   length           = 32
-  special          = true
+  special          = false
 }
 
 resource "random_password" "apisix_viewer_key" {
   length           = 32
-  special          = true
+  special          = false
 }
 
 module "ingress_apisix" {

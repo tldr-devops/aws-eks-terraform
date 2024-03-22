@@ -17,7 +17,7 @@ locals {
 
 resource "random_password" "grafana_admin_password" {
   length           = 32
-  special          = true
+  special          = false
 }
 
 module "kubernetes_manifests" {
@@ -31,15 +31,6 @@ module "kubernetes_manifests" {
   values = [
     <<-EOT
     resources:
-      - kind: Secret
-        apiVersion: v1
-        metadata:
-          name: "grafana-admin-credentials"
-          namespace: "${var.namespace}"
-        stringData:
-          username: "${var.admin_user}"
-          password: "${local.admin_password}"
-        type: Opaque
       - kind: Secret
         apiVersion: v1
         metadata:

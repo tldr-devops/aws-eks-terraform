@@ -33,7 +33,7 @@ locals {
 
 resource "random_password" "openobserve_root_password" {
   length           = 32
-  special          = true
+  special          = false
 }
 
 # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket

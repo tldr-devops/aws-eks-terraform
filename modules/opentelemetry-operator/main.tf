@@ -8,10 +8,15 @@ module "opentelemetry_operator" {
         name  = "admissionWebhooks.certManager.enabled"
         value = "false"
       },
-      {
-        name  = "admissionWebhooks.certManager.autoGenerateCert.enabled"
-        value = "true"
-      },
+
+# Error: values don't meet the specifications of the schema(s) in the following chart(s):
+# │ opentelemetry-operator:
+# │ - admissionWebhooks.certManager: Additional property autoGenerateCert is not allowed
+#       {
+#         name  = "admissionWebhooks.certManager.autoGenerateCert.enabled"
+#         value = "true"
+#       },
+
     ],
     var.set
   )

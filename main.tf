@@ -668,8 +668,6 @@ module "qryn" {
   )
 }
 
-
-
 module "openobserve" {
   source = "./modules/openobserve"
   count = var.enable_openobserve ? 1 : 0
@@ -717,6 +715,83 @@ module "openobserve_collector" {
   values = concat(
     [templatefile("${path.module}/universal_values.yaml", {})],
     var.openobserve_collector_values
+  )
+}
+
+# https://medium.com/ibm-cloud/log-collectors-performance-benchmarking-8c5218a08fea
+# vector is still buggy =\ https://github.com/vectordotdev/vector/issues/12014
+module "vector_agent" {
+  source = "./modules/vector"
+  count = var.enable_vector_agent ? 1 : 0
+
+  create        = var.enable_vector_agent
+  chart_version = var.vector_agent_chart_version
+  namespace     = var.vector_agent_namespace
+  set           = var.vector_agent_set
+  tags          = var.tags
+
+  values = concat(
+    [templatefile("${path.module}/universal_values.yaml", {})],
+    [
+    <<-EOT
+      role: "Agent"
+
+      # customConfig -- Override Vector's default configs, if used **all** options need to be specified. This section supports
+      # using helm templates to populate dynamic values. See Vector's [configuration documentation](https://vector.dev/docs/reference/configuration/)
+      # for all options.
+      customConfig:
+        data_dir: /vector-data-dir
+        api:
+          enabled: true
+          address: 127.0.0.1:8686
+          playground: false
+
+        # https://vector.dev/docs/reference/configuration/sources/
+        sources:
+          kubernetes_logs:
+            type: kubernetes_logs
+          internal_metrics:
+            type: internal_metrics
+
+        # https://vector.dev/docs/reference/configuration/transforms/
+        transforms: {}
+
+        # https://vector.dev/docs/reference/configuration/sinks/
+        sinks:
+          prom_exporter:
+            type: prometheus_exporter
+            inputs: [internal_metrics]
+            address: 0.0.0.0:9090
+          %{ if var.enable_uptrace == true }
+          uptrace:
+            type: "http"
+            method: "post"
+            inputs:
+              - kubernetes_logs
+            encoding:
+              codec: "json"
+            framing:
+              method: "newline_delimited"
+            compression: "gzip"
+            request:
+              headers:
+                uptrace-dsn: "http://${module.uptrace[0].project_tokens[1]}@${module.uptrace[0].chart.uptrace}.${module.uptrace[0].namespace.uptrace}.svc:14318/2?grpc=14317"
+            uri: "http://${module.uptrace[0].chart.uptrace}.${module.uptrace[0].namespace.uptrace}.svc:14318/api/v1/vector/logs"
+          %{ endif }
+          %{ if var.enable_qryn == true }
+          qryn:
+            type: "loki"
+            inputs:
+              - kubernetes_logs
+            endpoint: "http://${module.qryn[0].chart.qryn}.${module.qryn[0].namespace.qryn}.svc:3100"
+            auth:
+              strategy: "basic"
+              password: "${module.qryn[0].root_password}"
+              user: "${var.admin_email}"
+          %{ endif }
+    EOT
+    ],
+    var.vector_agent_values
   )
 }
 

@@ -154,6 +154,7 @@ module "eks" {
   enable_victoriametrics          = true
   enable_grafana                  = true
   enable_uptrace                  = true
+  enable_vector_agent             = true
   enable_qryn                     = false
   enable_openobserve              = false
   enable_openobserve_collector    = false

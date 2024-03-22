@@ -99,6 +99,31 @@ locals {
             # Overrides public URL for Vue-powered UI.
             #addr: 'https://uptrace.mydomain.com'
 
+          spans:
+            # The size of the Go chan used to buffer incoming spans.
+            # If the buffer is full, Uptrace starts to drop spans.
+            buffer_size: 100000
+
+            # The number of spans to insert in a single query.
+            #batch_size: 10000
+
+          metrics:
+            # List of attributes to drop for being noisy.
+            drop_attrs:
+              - telemetry_sdk_language
+              - telemetry_sdk_name
+              - telemetry_sdk_version
+
+            # The size of the Go chan used to buffer incoming measures.
+            # If the buffer is full, Uptrace starts to drop measures.
+            buffer_size: 100000
+
+            # The number of measures to insert in a single query.
+            #batch_size: 10000
+
+            # The size of the buffer for converting cumulative metrics to delta.
+            #cum_to_delta_size: 100000
+
           ## SMTP settings to send emails.
           ## https://uptrace.dev/get/alerting.html
           smtp_mailer:
@@ -267,18 +292,18 @@ locals {
 
 resource "random_password" "uptrace_root_password" {
   length           = 32
-  special          = true
+  special          = false
 }
 
 resource "random_password" "uptrace_project_tokens" {
   count = 2
   length           = 32
-  special          = true
+  special          = false
 }
 
 resource "random_password" "uptrace_secret_key" {
   length           = 32
-  special          = true
+  special          = false
 }
 
 resource "random_password" "clickhouse_password" {
@@ -603,9 +628,9 @@ module "grafana_operator_datasource" {
           namespace: "${var.grafana_operator_namespace}"
         stringData:
           token1: "${random_password.uptrace_project_tokens[0].result}"
-          header1: "http://${random_password.uptrace_project_tokens[0].result}@${module.uptrace.chart.uptrace}.${module.uptrace.namespace.uptrace}.svc:14318/1?grpc=14317"
+          header1: "http://${random_password.uptrace_project_tokens[0].result}@${module.uptrace.chart}.${module.uptrace.namespace}.svc:14318/1?grpc=14317"
           token2: "${random_password.uptrace_project_tokens[1].result}"
-          header2: "http://${random_password.uptrace_project_tokens[1].result}@${module.uptrace.chart.uptrace}.${module.uptrace.namespace.uptrace}.svc:14318/2?grpc=14317"
+          header2: "http://${random_password.uptrace_project_tokens[1].result}@${module.uptrace.chart}.${module.uptrace.namespace}.svc:14318/2?grpc=14317"
         type: Opaque
       - apiVersion: grafana.integreatly.org/v1beta1
         kind: GrafanaDatasource
@@ -625,7 +650,7 @@ module "grafana_operator_datasource" {
             name: "Uptrace-${var.namespace}"
             type: prometheus
             access: proxy
-            url: "http://${module.uptrace.chart.uptrace}.${module.uptrace.namespace.uptrace}.svc:14318/api/prometheus"
+            url: "http://${module.uptrace.chart}.${module.uptrace.namespace}.svc:14318/api/prometheus"
             isDefault: false
             jsonData:
               "httpHeaderName1": "uptrace-dsn"
@@ -652,7 +677,7 @@ module "grafana_operator_datasource" {
             name: "Uptrace-Tempo-${var.namespace}"
             type: tempo
             access: proxy
-            url: "http://${module.uptrace.chart.uptrace}.${module.uptrace.namespace.uptrace}.svc:14318/api/tempo"
+            url: "http://${module.uptrace.chart}.${module.uptrace.namespace}.svc:14318/api/tempo"
             isDefault: false
             jsonData:
               "httpHeaderName1": "uptrace-dsn"
@@ -679,7 +704,7 @@ module "grafana_operator_datasource" {
             name: "Uptrace-Monitoring-${var.namespace}"
             type: prometheus
             access: proxy
-            url: "http://${module.uptrace.chart.uptrace}.${module.uptrace.namespace.uptrace}.svc:14318/api/prometheus"
+            url: "http://${module.uptrace.chart}.${module.uptrace.namespace}.svc:14318/api/prometheus"
             isDefault: false
             jsonData:
               "httpHeaderName1": "uptrace-dsn"
@@ -706,7 +731,7 @@ module "grafana_operator_datasource" {
             name: "Uptrace-Monitoring-Tempo-${var.namespace}"
             type: tempo
             access: proxy
-            url: "http://${module.uptrace.chart.uptrace}.${module.uptrace.namespace.uptrace}.svc:14318/api/tempo"
+            url: "http://${module.uptrace.chart}.${module.uptrace.namespace}.svc:14318/api/tempo"
             isDefault: false
             jsonData:
               "httpHeaderName1": "uptrace-dsn"

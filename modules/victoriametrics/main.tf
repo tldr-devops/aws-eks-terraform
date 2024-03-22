@@ -65,12 +65,12 @@ locals {
 
 resource "random_password" "grafana_admin_password" {
   length           = 32
-  special          = true
+  special          = false
 }
 
 resource "random_password" "auth_vmagent_rw_password" {
   length           = 32
-  special          = true
+  special          = false
 }
 
 module "kubernetes_manifests" {

@@ -94,7 +94,7 @@ locals {
 
 resource "random_password" "qryn_root_password" {
   length           = 32
-  special          = true
+  special          = false
 }
 
 resource "random_password" "clickhouse_password" {

@@ -669,6 +669,36 @@ variable "openobserve_collector_values" {
   default     = [""]
 }
 
+variable "enable_vector_agent" {
+  description = "Install Vector Agent"
+  type        = bool
+  default     = true
+}
+
+variable "vector_agent_chart_version" {
+  description = "Vector Agent chart version"
+  type        = string
+  default     = null
+}
+
+variable "vector_agent_namespace" {
+  description = "Vector Agent namespace"
+  type        = string
+  default     = "monitoring"
+}
+
+variable "vector_agent_set" {
+  description = "Vector Agent helm value block with custom values to be merged with the values yaml"
+  type        = any
+  default     = []
+}
+
+variable "vector_agent_values" {
+  description = "Vector Agent list of values in raw yaml to pass to helm. Values will be merged, in order, as Helm does with multiple `-f` options"
+  type        = list(string)
+  default     = [""]
+}
+
 # DASHBOARD
 
 variable "enable_kubernetes_dashboard" {
