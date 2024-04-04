@@ -138,6 +138,6 @@ module "iam_eks_role" {
 
 resource "null_resource" "kubectl" {
     provisioner "local-exec" {
-        command = "aws eks --region ${data.aws_region.current.name} update-kubeconfig --name ${module.eks.cluster_name} --kubeconfig ~/.kube/eks-${data.aws_region.current.name}-${module.eks.cluster_name}"
+        command = "aws eks --region ${data.aws_region.current.name} update-kubeconfig --name ${module.eks.cluster_name} --kubeconfig ~/.kube/eks-${data.aws_caller_identity.current.account_id}-${data.aws_region.current.name}-${module.eks.cluster_name}"
     }
 }

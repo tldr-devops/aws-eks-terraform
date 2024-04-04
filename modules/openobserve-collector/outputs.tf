@@ -32,10 +32,10 @@ output "app_version" {
   value       = try(module.openobserve-collector.app_version, null)
 }
 
-output "values" {
-  description = "The compounded values from `values` and `set*` attributes"
-  value       = try(module.openobserve-collector.values, [])
-}
+# output "values" {
+#   description = "The compounded values from `values` and `set*` attributes"
+#   value       = try(module.openobserve-collector.values, [])
+# }
 
 ################################################################################
 # IAM Role for Service Account(s) (IRSA)

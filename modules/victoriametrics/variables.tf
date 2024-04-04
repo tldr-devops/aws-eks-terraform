@@ -16,6 +16,24 @@ variable "auth_vmagent_rw_password" {
   default     = null
 }
 
+variable "auth_victoriametrics_password" {
+  description = "Victoriametrics read write password"
+  type        = string
+  default     = null
+}
+
+variable "auth_alertmanager_password" {
+  description = "Alertmanager read write password"
+  type        = string
+  default     = null
+}
+
+variable "auth_vmalert_password" {
+  description = "Vmalert read write password"
+  type        = string
+  default     = null
+}
+
 variable "grafana_operator_integration" {
   description = "Controls if Grafana instance should be connected to Grafana Operator"
   type        = bool

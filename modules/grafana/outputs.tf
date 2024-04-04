@@ -28,6 +28,11 @@ output "app_version" {
   value       = try(module.grafana.app_version, null)
 }
 
+# output "values" {
+#   description = "The compounded values from `values` and `set*` attributes"
+#   value       = try(module.grafana.values, null)
+# }
+
 ################################################################################
 # Grafana
 ################################################################################

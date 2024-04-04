@@ -55,14 +55,14 @@ output "app_version" {
   }
 }
 
-output "values" {
-  description = "The compounded values from `values` and `set*` attributes"
-  value       = {
-    uptrace        = try(module.uptrace.values, [])
-    clickhouse  = try(module.clickhouse.values, [])
-    postgresql  = try(module.postgresql.values, [])
-  }
-}
+# output "values" {
+#   description = "The compounded values from `values` and `set*` attributes"
+#   value       = {
+#     uptrace        = try(module.uptrace.values, [])
+#     clickhouse  = try(module.clickhouse.values, [])
+#     postgresql  = try(module.postgresql.values, [])
+#   }
+# }
 
 ################################################################################
 # IAM Role for Service Account(s) (IRSA)

@@ -2,14 +2,62 @@
 # https://docs.google.com/spreadsheets/d/191WWNpjJ2za6-nbG4ZoUMXMpUK8KlCIosvQB0f-oq3k/edit#gid=907731238
 # https://github.com/apache/apisix-helm-chart/blob/master/charts/apisix-ingress-controller/values.yaml
 
+# https://apisix.apache.org/docs/ingress-controller/getting-started/
+# https://navendu.me/series/hands-on-with-apache-apisix-ingress/
+
+locals {
+  # https://github.com/apache/apisix-helm-chart/blob/master/charts/apisix-ingress-controller/values.yaml
+  values = [
+    <<-EOT
+      config:
+        etcdserver:
+          enabled: true
+        apisix:
+          # -- Enabling this value, overrides serviceName and serviceNamespace.
+          clusterName: "default"
+          # -- the APISIX admin API version. can be "v2" or "v3", default is "v2".
+          adminAPIVersion: "v2"
+          # -- The APISIX Helm chart supports storing user credentials in a secret.
+          # The secret needs to contain a single key for admin token with key adminKey by default.
+          existingSecret: "apisix-admin-password"
+      gateway:
+        # -- Apache APISIX service type for user access itself
+        type: LoadBalancer
+        annotations:
+          service.beta.kubernetes.io/aws-load-balancer-type: nlb
+        tls:
+          enabled: true
+    EOT
+  ]
+  set = []
+}
+
 resource "random_password" "apisix_admin_key" {
   length           = 32
   special          = false
 }
 
-resource "random_password" "apisix_viewer_key" {
-  length           = 32
-  special          = false
+module "kubernetes_manifests" {
+  source = "../kubernetes-manifests"
+
+  create        = var.create
+  name          = "apisix-manifests"
+  namespace     = var.namespace
+  tags          = var.tags
+
+  values = [
+    <<-EOT
+    resources:
+      - kind: Secret
+        apiVersion: v1
+        metadata:
+          name: "apisix-admin-password"
+          namespace: "${var.namespace}"
+        stringData:
+          adminKey: "${random_password.apisix_admin_key.result}"
+        type: Opaque
+    EOT
+  ]
 }
 
 module "ingress_apisix" {
@@ -17,49 +65,13 @@ module "ingress_apisix" {
   version = "~> 1.1"
 
   set = concat(
-    [
-      {
-        name  = "config.etcdserver.enabled"
-        value = "true"
-      },
-      {
-        name  = "gateway.type"
-        value = "LoadBalancer"
-      },
-      {
-        name  = "ingress-controller.enabled"
-        value = "true"
-      },
-      {
-        name  = "ingress-controller.config.apisix.serviceNamespace"
-        value = var.namespace
-      },
-      {
-        name  = "ingress-controller.config.apisix.adminAPIVersion"
-        value = "v3"
-      },
-      {
-        name  = "gateway.tls.enabled"
-        value = "true"
-      },
-      {
-        name  = "gateway.annotations.service\\.beta\\.kubernetes\\.io/aws-load-balancer-type"
-        value = "nlb"
-      },
-      {
-        name  = "ingress-controller.config.apisix.adminKey"
-        value = random_password.apisix_admin_key.result
-      },
-      {
-        name  = "admin.credentials.admin"
-        value = random_password.apisix_admin_key.result
-      },
-      {
-        name  = "admin.credentials.viewer"
-        value = random_password.apisix_viewer_key.result
-      },
-    ],
+    local.set,
     var.set
+  )
+
+  values = concat(
+    local.values,
+    var.values
   )
 
   create = var.create
@@ -72,7 +84,6 @@ module "ingress_apisix" {
   chart = var.chart
   chart_version = var.chart_version
   repository = var.repository
-  values = var.values
   timeout = var.timeout
   repository_key_file = var.repository_key_file
   repository_cert_file = var.repository_cert_file

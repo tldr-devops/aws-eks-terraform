@@ -3,8 +3,10 @@ provider "aws" {
 }
 
 locals {
-  cluster_name = "test"
-  admin_email  = "test@test.com"
+  cluster_name        = "test"
+  admin_email         = "test@test.com"
+  ingress_domain      = "cluster.local"
+  cert_manager_issuer = ""
 
   vpc_name = "eks_${local.cluster_name}"
   azs = data.aws_availability_zones.available.names
@@ -128,6 +130,8 @@ module "eks" {
 
   cluster_name                                    = local.cluster_name
   admin_email                                     = local.admin_email
+  ingress_domain                                  = local.ingress_domain
+  cert_manager_issuer                             = local.cert_manager_issuer
   vpc_id                                          = module.vpc.vpc_id
   number_of_multi_az                              = local.number_of_multi_az
   self_managed_node_group_number_of_multi_az      = local.self_managed_node_group_number_of_multi_az

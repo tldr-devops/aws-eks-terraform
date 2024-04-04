@@ -5,6 +5,18 @@ locals {
   auth_vmagent_rw_password = coalesce(var.auth_vmagent_rw_password, random_password.auth_vmagent_rw_password.result)
   auth_vmagent_rw_user = "agent"
 
+  auth_vmsingle_password = coalesce(var.auth_victoriametrics_password, random_password.auth_victoriametrics_password.result)
+  auth_vmsingle_user = "vmsingle"
+
+  auth_vmselect_password = coalesce(var.auth_victoriametrics_password, random_password.auth_victoriametrics_password.result)
+  auth_vmselect_user = "vmselect"
+
+  auth_alertmanager_password = coalesce(var.auth_alertmanager_password, random_password.auth_alertmanager_password.result)
+  auth_alertmanager_user = "alertmanager"
+
+  auth_vmalert_password = coalesce(var.auth_vmalert_password, random_password.auth_vmalert_password.result)
+  auth_vmalert_user = "vmalert"
+
   # https://github.com/VictoriaMetrics/helm-charts/blob/72ae97b4cfb27797928952d2bb0a3f3ecc146cee/charts/victoria-metrics-k8s-stack/values.yaml
   values = [
     <<-EOT
@@ -73,6 +85,21 @@ resource "random_password" "auth_vmagent_rw_password" {
   special          = false
 }
 
+resource "random_password" "auth_victoriametrics_password" {
+  length           = 32
+  special          = false
+}
+
+resource "random_password" "auth_alertmanager_password" {
+  length           = 32
+  special          = false
+}
+
+resource "random_password" "auth_vmalert_password" {
+  length           = 32
+  special          = false
+}
+
 module "kubernetes_manifests" {
   source = "../kubernetes-manifests"
 
@@ -105,6 +132,18 @@ module "kubernetes_manifests" {
               - username: "${local.auth_vmagent_rw_user}"
                 password: "${local.auth_vmagent_rw_password}"
                 url_prefix: "http://vmagent-${module.victoriametrics.chart}:8429/"
+              - username: "${local.auth_vmsingle_user}"
+                password: "${local.auth_vmsingle_password}"
+                url_prefix: "http://vmsingle-${module.victoriametrics.chart}:8429/"
+              - username: "${local.auth_vmselect_user}"
+                password: "${local.auth_vmselect_password}"
+                url_prefix: "http://vmselect-${module.victoriametrics.chart}:8481/"
+              - username: "${local.auth_alertmanager_user}"
+                password: "${local.auth_alertmanager_password}"
+                url_prefix: "http://vmalertmanager-${module.victoriametrics.chart}:9093/"
+              - username: "${local.auth_vmalert_user}"
+                password: "${local.auth_vmalert_password}"
+                url_prefix: "http://vmalert-${module.victoriametrics.chart}:8080/"
         type: Opaque
     EOT
   ]

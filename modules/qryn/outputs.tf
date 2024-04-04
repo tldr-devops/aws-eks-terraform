@@ -50,13 +50,13 @@ output "app_version" {
   }
 }
 
-output "values" {
-  description = "The compounded values from `values` and `set*` attributes"
-  value       = {
-    qryn        = try(module.qryn.values, [])
-    clickhouse  = try(module.clickhouse.values, [])
-  }
-}
+# output "values" {
+#   description = "The compounded values from `values` and `set*` attributes"
+#   value       = {
+#     qryn        = try(module.qryn.values, [])
+#     clickhouse  = try(module.clickhouse.values, [])
+#   }
+# }
 
 ################################################################################
 # IAM Role for Service Account(s) (IRSA)

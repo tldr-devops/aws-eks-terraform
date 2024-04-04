@@ -4,6 +4,26 @@ variable "admin_email" {
   default     = null
 }
 
+variable "ingress_domain" {
+  description = "Main domain for ingress setup"
+  type        = string
+  default     = "cluster.local"
+}
+
+variable "ingress_class_name" {
+  description = "Default ingress class name"
+  type        = string
+  default     = "apisix"
+}
+
+variable "cert_manager_issuer" {
+  description = "Default Cert Manager Cluster Issuer"
+  type        = string
+  default     = null
+}
+
+# EKS
+
 variable "vpc_id" {
   description = "ID of target VPC, 'default' will be used by default"
   type        = string
@@ -195,6 +215,8 @@ variable "tags" {
   default     = { Terraform = "true" }
 }
 
+# AWS EFS CSI DRIVER
+
 variable "enable_aws_efs_csi_driver" {
   description = "Install latest AWS EFS CSI driver"
   type        = bool
@@ -206,6 +228,8 @@ variable "aws_efs_csi_driver_config" {
   type        = any
   default     = {}
 }
+
+# AWS NODE TERMINATION HANDLER
 
 # variable "enable_aws_node_termination_handler" {
 #   description = "Install latest AWS node termination handler"
@@ -219,6 +243,8 @@ variable "aws_efs_csi_driver_config" {
 #   default     = {}
 # }
 
+# CERT MANAGER
+
 variable "enable_cert_manager" {
   description = "Install latest cert-manager"
   type        = bool
@@ -230,6 +256,8 @@ variable "cert_manager_config" {
   type        = any
   default     = {}
 }
+
+# CLUSTER AUTOSCALER
 
 variable "enable_cluster_autoscaler" {
   description = "Install latest cluster autoscaler"
@@ -243,6 +271,8 @@ variable "cluster_autoscaler_config" {
   default     = {}
 }
 
+# METRICS SERVER
+
 variable "enable_metrics_server" {
   description = "Install latest metrics server"
   type        = bool
@@ -254,6 +284,8 @@ variable "metrics_server_config" {
   type        = any
   default     = {}
 }
+
+# VPA
 
 variable "enable_vpa" {
   description = "Install latest Vertical Pod Autoscaler"
@@ -267,7 +299,7 @@ variable "vpa_config" {
   default     = {}
 }
 
-# INGRESS
+# INGRESS APISIX
 
 variable "enable_ingress_apisix" {
   description = "Install ingress Apisix"
@@ -287,7 +319,19 @@ variable "ingress_apisix_namespace" {
   default     = "ingress-apisix"
 }
 
-# OPERATORS
+variable "ingress_apisix_set" {
+  description = "Ingress Apisix helm value block with custom values to be merged with the values yaml"
+  type        = any
+  default     = []
+}
+
+variable "ingress_apisix_values" {
+  description = "Ingress Apisix list of values in raw yaml to pass to helm. Values will be merged, in order, as Helm does with multiple `-f` options"
+  type        = list(string)
+  default     = [""]
+}
+
+# VICTORIAMETRICS OPERATOR
 
 variable "enable_victoriametrics_operator" {
   description = "Install VictoriaMetrics Operator"
@@ -319,6 +363,8 @@ variable "victoriametrics_operator_values" {
   default     = [""]
 }
 
+# OPENTELEMETRY OPERATOR
+
 variable "enable_opentelemetry_operator" {
   description = "Install Opentelemetry Operator"
   type        = bool
@@ -348,6 +394,8 @@ variable "opentelemetry_operator_values" {
   type        = list(string)
   default     = [""]
 }
+
+# CLICKHOUSE OPERATOR
 
 variable "enable_clickhouse_operator" {
   description = "Install Clickhouse Operator"
@@ -379,6 +427,8 @@ variable "clickhouse_operator_values" {
   default     = [""]
 }
 
+# GRAFANA OPERATOR
+
 variable "enable_grafana_operator" {
   description = "Install Grafana Operator"
   type        = bool
@@ -409,7 +459,7 @@ variable "grafana_operator_values" {
   default     = [""]
 }
 
-# MONITORING
+# VICTORIAMETRICS
 
 variable "enable_victoriametrics" {
   description = "Install VictoriaMetrics Stack"
@@ -441,6 +491,18 @@ variable "victoriametrics_values" {
   default     = [""]
 }
 
+variable "victoriametrics_grafana_ingress_enabled" {
+  description = "Enable VictoriaMetrics Grafana public ingress"
+  type        = bool
+  default     = true
+}
+
+variable "victoriametrics_cert_manager_issuer" {
+  description = "Cluster Issuer for Cert Manager used in Ingress"
+  type        = string
+  default     = null
+}
+
 variable "victoriametrics_auth_chart_version" {
   description = "VictoriaMetrics Auth chart version"
   type        = string
@@ -458,6 +520,14 @@ variable "victoriametrics_auth_values" {
   type        = list(string)
   default     = [""]
 }
+
+variable "victoriametrics_auth_ingress_enabled" {
+  description = "Enable VictoriaMetrics Auth public ingress"
+  type        = bool
+  default     = true
+}
+
+# GRAFANA
 
 variable "enable_grafana" {
   description = "Install Grafana"
@@ -489,6 +559,20 @@ variable "grafana_values" {
   default     = [""]
 }
 
+variable "grafana_ingress_enabled" {
+  description = "Enable Grafana public ingress"
+  type        = bool
+  default     = true
+}
+
+variable "grafana_cert_manager_issuer" {
+  description = "Cluster Issuer for Cert Manager used in Ingress"
+  type        = string
+  default     = null
+}
+
+# UPTRACE
+
 variable "enable_uptrace" {
   description = "Install Uptrace"
   type        = bool
@@ -517,6 +601,18 @@ variable "uptrace_values" {
   description = "Uptrace list of values in raw yaml to pass to helm. Values will be merged, in order, as Helm does with multiple `-f` options"
   type        = list(string)
   default     = [""]
+}
+
+variable "uptrace_ingress_enabled" {
+  description = "Enable Uptrace public ingress"
+  type        = bool
+  default     = true
+}
+
+variable "uptrace_cert_manager_issuer" {
+  description = "Cluster Issuer for Cert Manager used in Ingress"
+  type        = string
+  default     = null
 }
 
 variable "uptrace_clickhouse_chart_version" {
@@ -555,6 +651,8 @@ variable "uptrace_postgresql_values" {
   default     = [""]
 }
 
+# QRYN
+
 variable "enable_qryn" {
   description = "Install Qryn"
   type        = bool
@@ -585,6 +683,18 @@ variable "qryn_values" {
   default     = [""]
 }
 
+variable "qryn_ingress_enabled" {
+  description = "Enable Qryn public ingress"
+  type        = bool
+  default     = true
+}
+
+variable "qryn_cert_manager_issuer" {
+  description = "Cluster Issuer for Cert Manager used in Ingress"
+  type        = string
+  default     = null
+}
+
 variable "qryn_clickhouse_chart_version" {
   description = "Qryn Clickhouse chart version"
   type        = string
@@ -602,6 +712,8 @@ variable "qryn_clickhouse_values" {
   type        = list(string)
   default     = [""]
 }
+
+# OPENOBSERVE
 
 variable "enable_openobserve" {
   description = "Install Openobserve"
@@ -639,6 +751,18 @@ variable "openobserve_values" {
   default     = [""]
 }
 
+variable "openobserve_ingress_enabled" {
+  description = "Enable Openobserve public ingress"
+  type        = bool
+  default     = true
+}
+
+variable "openobserve_cert_manager_issuer" {
+  description = "Cluster Issuer for Cert Manager used in Ingress"
+  type        = string
+  default     = null
+}
+
 variable "enable_openobserve_collector" {
   description = "Install Openobserve Collector"
   type        = bool
@@ -668,6 +792,8 @@ variable "openobserve_collector_values" {
   type        = list(string)
   default     = [""]
 }
+
+# VECTOR
 
 variable "enable_vector_agent" {
   description = "Install Vector Agent"
@@ -699,7 +825,7 @@ variable "vector_agent_values" {
   default     = [""]
 }
 
-# DASHBOARD
+# K8S DASHBOARD
 
 variable "enable_kubernetes_dashboard" {
   description = "Install Kubernetes Dashboard"
@@ -729,4 +855,16 @@ variable "kubernetes_dashboard_values" {
   description = "Kubernetes Dashboard list of values in raw yaml to pass to helm. Values will be merged, in order, as Helm does with multiple `-f` options"
   type        = list(string)
   default     = [""]
+}
+
+variable "kubernetes_dashboard_ingress_enabled" {
+  description = "Enable Kubernetes Dashboard public ingress"
+  type        = bool
+  default     = false
+}
+
+variable "kubernetes_dashboard_cert_manager_issuer" {
+  description = "Cluster Issuer for Cert Manager used in Ingress"
+  type        = string
+  default     = null
 }

@@ -32,8 +32,3 @@ output "apisix_admin_key" {
   description = "The apisix admin key"
   value       = random_password.apisix_admin_key
 }
-
-output "apisix_viewer_key" {
-  description = "The apisix viewer key"
-  value       = random_password.apisix_viewer_key
-}

@@ -4,6 +4,7 @@ locals {
   zo_root_user_password = coalesce(var.zo_root_user_password, random_password.openobserve_root_password.result)
 
   # https://openobserve.ai/docs/environment-variables/
+  # https://github.com/openobserve/openobserve-helm-chart/blob/main/charts/openobserve-standalone/values.yaml
   values = [
     <<-EOT
       auth:

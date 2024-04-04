@@ -41,7 +41,9 @@ Helm upgrade `reset_values` flag set to `true` for everything except databases l
 |cluster_endpoint|Endpoint for your Kubernetes API server|
 |cluster_certificate_authority_data|Base64 encoded certificate data required to communicate with the cluster|
 
-Also `~/.kube/eks-${data.aws_region.current"}-${module.eks.cluster_name}` will be created by `aws eks` utility.
+Also `~/.kube/eks-${account_id}-${region}-${cluster_name}` will be created by `aws eks` utility.
+
+You can describe apisix ingress external address with kubectl: `kubectl get service/apisix-ingress-controller-apisix-gateway -n ingress-apisix`.
 
 ## About the Author
 

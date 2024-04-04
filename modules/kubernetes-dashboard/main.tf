@@ -1,30 +1,36 @@
 # https://github.com/kubernetes/dashboard
 # https://github.com/kubernetes/dashboard/blob/master/docs/user/access-control/README.md
 
+locals {
+  # https://github.com/kubernetes/dashboard/blob/master/charts/kubernetes-dashboard/values.yaml
+  values = [
+    <<-EOT
+      app:
+        ingress:
+          enabled: false
+      nginx:
+        enabled: false
+      cert-manager:
+        enabled: false
+      networkPolicy:
+        enabled: true
+    EOT
+  ]
+  set = []
+}
+
 module "kubernetes_dashboard" {
   source = "aws-ia/eks-blueprints-addon/aws"
   version = "~> 1.1"
 
   set = concat(
-    [
-      {
-        name  = "nginx.enabled"
-        value = "false"
-      },
-      {
-        name  = "cert-manager.enabled"
-        value = "false"
-      },
-      {
-        name  = "app.ingress.enabled"
-        value = "false"
-      },
-      {
-        name  = "networkPolicy.enabled"
-        value = "true"
-      },
-    ],
+    local.set,
     var.set
+  )
+
+  values = concat(
+    local.values,
+    var.values
   )
 
   create = var.create
@@ -37,7 +43,6 @@ module "kubernetes_dashboard" {
   chart = var.chart
   chart_version = var.chart_version
   repository = var.repository
-  values = var.values
   timeout = var.timeout
   repository_key_file = var.repository_key_file
   repository_cert_file = var.repository_cert_file

@@ -50,10 +50,10 @@ output "app_version" {
   }
 }
 
-output "values" {
-  description = "The compounded values from `values` and `set*` attributes"
-  value       = {
-    victoriametrics           = try(module.victoriametrics.values, [])
-    prometheus_operator_crds  = try(module.prometheus_operator_crds.values, [])
-  }
-}
+# output "values" {
+#   description = "The compounded values from `values` and `set*` attributes"
+#   value       = {
+#     victoriametrics           = try(module.victoriametrics.values, [])
+#     prometheus_operator_crds  = try(module.prometheus_operator_crds.values, [])
+#   }
+# }

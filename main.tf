@@ -299,6 +299,8 @@ module "eks" {
   tags = var.tags
 }
 
+# IRSA
+
 module "ebs_csi_driver_irsa" {
   source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
   version = "~> 5.20"
@@ -356,6 +358,7 @@ module "addons" {
   #aws_node_termination_handler = local.aws_node_termination_handler_config
 
   # https://github.com/aws-ia/terraform-aws-eks-blueprints-addons/blob/0e9d6c9b7115ecf0404c377c9c2529bffa56d10d/docs/addons/cert-manager.md
+  # https://github.com/cert-manager/cert-manager/blob/master/deploy/charts/cert-manager/values.yaml
   enable_cert_manager = var.enable_cert_manager
   cert_manager = local.cert_manager_config
 
@@ -374,24 +377,53 @@ module "addons" {
   tags = var.tags
 }
 
-# INGRESS APISIX
-
-module "ingress_apisix" {
-  source = "./modules/apisix"
-  count = var.enable_ingress_apisix ? 1 : 0
+# https://cert-manager.io/docs/configuration/acme/
+module "cert_manager_acme_manifests" {
+  source = "./modules/kubernetes-manifests"
+  count = var.enable_cert_manager ? 1 : 0
 
   depends_on = [
     #module.eks,
-    #module.addons
+    module.addons
   ]
 
-  create        = var.enable_ingress_apisix
-  chart_version = can(var.ingress_apisix_chart_version) ? var.ingress_apisix_chart_version : null
-  namespace     = var.ingress_apisix_namespace
+  create        = true
+  name          = "cert-manager-acme-manifests"
+  namespace     = try(var.cert_manager_config.namespace, "cert-manager")
   tags          = var.tags
 
   values = [
-    templatefile("${path.module}/universal_values.yaml", {})
+    <<-EOT
+    resources:
+      - apiVersion: cert-manager.io/v1
+        kind: ClusterIssuer
+        metadata:
+          name: letsencrypt-staging
+        spec:
+          acme:
+            email: "${var.admin_email}"
+            server: "https://acme-staging-v02.api.letsencrypt.org/directory"
+            privateKeySecretRef:
+              name: cert-manager-issuer-letsencrypt-staging-account-key
+            solvers:
+              - http01:
+                  ingress:
+                    ingressClassName: "${var.ingress_class_name}"
+      - apiVersion: cert-manager.io/v1
+        kind: ClusterIssuer
+        metadata:
+          name: letsencrypt-prod
+        spec:
+          acme:
+            email: "${var.admin_email}"
+            server: "https://acme-v01.api.letsencrypt.org/directory"
+            privateKeySecretRef:
+              name: cert-manager-issuer-letsencrypt-prod-account-key
+            solvers:
+              - http01:
+                  ingress:
+                    ingressClassName: "${var.ingress_class_name}"
+    EOT
   ]
 }
 
@@ -481,6 +513,39 @@ module "clickhouse_operator" {
   )
 }
 
+# INGRESS APISIX
+
+module "ingress_apisix" {
+  source = "./modules/apisix"
+  count = var.enable_ingress_apisix ? 1 : 0
+
+  depends_on = [
+    #module.eks,
+    #module.addons
+    module.victoriametrics_operator
+  ]
+
+  create        = var.enable_ingress_apisix
+  chart_version = can(var.ingress_apisix_chart_version) ? var.ingress_apisix_chart_version : null
+  namespace     = var.ingress_apisix_namespace
+  set           = var.ingress_apisix_set
+  tags          = var.tags
+
+  values = concat(
+    [templatefile("${path.module}/universal_values.yaml", {})],
+    [
+    <<-EOT
+      %{ if var.enable_victoriametrics_operator == true }
+      serviceMonitor:
+        enabled: true
+        namespace: "${var.ingress_apisix_namespace}"
+      %{ endif }
+    EOT
+    ],
+    var.ingress_apisix_values
+  )
+}
+
 # MONITORING
 
 module "victoriametrics" {
@@ -528,6 +593,31 @@ module "victoriametrics" {
         allowCrossNamespaceImport: true
       grafana:
         enabled: false
+      %{ else }
+      %{ if var.victoriametrics_grafana_ingress_enabled == true }
+      grafana:
+        enabled: true
+        ingress:
+          enabled: true
+          ingressClassName: ${var.ingress_class_name}
+          # https://apisix.apache.org/docs/ingress-controller/concepts/annotations/
+          # https://cert-manager.io/docs/usage/ingress/
+          annotations:
+          kubernetes.io/ingress.class: ${var.ingress_class_name}
+          k8s.apisix.apache.org/enable-cors: "true"
+          %{~ if coalesce(var.victoriametrics_cert_manager_issuer, var.cert_manager_issuer, false) ~}
+          k8s.apisix.apache.org/http-to-https: "true"
+          cert-manager.io/cluster-issuer: ${coalesce(var.victoriametrics_cert_manager_issuer, var.cert_manager_issuer)}
+          %{ endif }
+          hosts:
+            - grafana.${var.ingress_domain}
+          %{~ if coalesce(var.victoriametrics_cert_manager_issuer, var.cert_manager_issuer, false) ~}
+          tls:
+            - secretName: grafana-${var.victoriametrics_namespace}-tls
+              hosts:
+              - grafana.${var.ingress_domain}
+          %{ endif }
+      %{ endif }
       %{ endif }
     EOT
     ,
@@ -558,6 +648,50 @@ module "victoriametrics" {
   auth_set           = var.victoriametrics_auth_set
   auth_values        = concat(
     [templatefile("${path.module}/universal_values.yaml", {})],
+    [
+    <<-EOT
+      %{ if var.victoriametrics_auth_ingress_enabled == true }
+      ingress:
+        enabled: true
+        ingressClassName: ${var.ingress_class_name}
+        # https://apisix.apache.org/docs/ingress-controller/concepts/annotations/
+        # https://cert-manager.io/docs/usage/ingress/
+        annotations:
+          kubernetes.io/ingress.class: ${var.ingress_class_name}
+          k8s.apisix.apache.org/enable-cors: "true"
+          %{~ if coalesce(var.victoriametrics_cert_manager_issuer, var.cert_manager_issuer, false) ~}
+          k8s.apisix.apache.org/http-to-https: "true"
+          cert-manager.io/cluster-issuer: ${coalesce(var.victoriametrics_cert_manager_issuer, var.cert_manager_issuer)}
+          %{ endif }
+        hosts:
+          - name: vmauth.${var.ingress_domain}
+            path: /
+            port: http
+          - name: victoriametrics.${var.ingress_domain}
+            path: /
+            port: http
+          - name: vmalertmanager.${var.ingress_domain}
+            path: /
+            port: http
+          - name: vmagent.${var.ingress_domain}
+            path: /
+            port: http
+          - name: vmalert.${var.ingress_domain}
+            path: /
+            port: http
+        %{~ if coalesce(var.victoriametrics_cert_manager_issuer, var.cert_manager_issuer, false) ~}
+        tls:
+          - secretName: vmauth-${var.victoriametrics_namespace}-tls
+            hosts:
+              - vmauth.${var.ingress_domain}
+              - victoriametrics.${var.ingress_domain}
+              - vmalertmanager.${var.ingress_domain}
+              - vmagent.${var.ingress_domain}
+              - vmalert.${var.ingress_domain}
+        %{ endif }
+      %{ endif }
+    EOT
+    ],
     var.victoriametrics_auth_values
   )
 
@@ -570,7 +704,8 @@ module "grafana" {
   depends_on = [
 #     module.eks,
 #     module.addons,
-    module.grafana_operator
+    module.grafana_operator,
+    module.victoriametrics_operator
   ]
 
   create        = var.enable_grafana
@@ -585,6 +720,36 @@ module "grafana" {
 
   values = concat(
     [templatefile("${path.module}/universal_values.yaml", {})],
+    [
+    <<-EOT
+      %{ if var.enable_victoriametrics_operator == true }
+      serviceMonitor:
+        enabled: true
+      %{ endif }
+      %{ if var.grafana_ingress_enabled == true }
+      ingress:
+        enabled: true
+        ingressClassName: ${var.ingress_class_name}
+        # https://apisix.apache.org/docs/ingress-controller/concepts/annotations/
+        # https://cert-manager.io/docs/usage/ingress/
+        annotations:
+          kubernetes.io/ingress.class: ${var.ingress_class_name}
+          k8s.apisix.apache.org/enable-cors: "true"
+          %{~ if coalesce(var.grafana_cert_manager_issuer, var.cert_manager_issuer, false) ~}
+          k8s.apisix.apache.org/http-to-https: "true"
+          cert-manager.io/cluster-issuer: ${coalesce(var.grafana_cert_manager_issuer, var.cert_manager_issuer)}
+          %{ endif }
+        hosts:
+          - grafana.${var.ingress_domain}
+        %{~ if coalesce(var.grafana_cert_manager_issuer, var.cert_manager_issuer, false) ~}
+        tls:
+          - secretName: grafana-${var.grafana_namespace}-tls
+            hosts:
+              - grafana.${var.ingress_domain}
+        %{ endif }
+      %{ endif }
+    EOT
+    ],
     var.grafana_values
   )
 }
@@ -614,6 +779,39 @@ module "uptrace" {
 
   values = concat(
     [templatefile("${path.module}/universal_values.yaml", {})],
+    [
+    <<-EOT
+      %{ if var.uptrace_ingress_enabled == true }
+      uptrace:
+        config:
+          site:
+            addr: 'https://uptrace.${var.ingress_domain}/'
+      ingress:
+        enabled: true
+        className: ${var.ingress_class_name}
+        # https://apisix.apache.org/docs/ingress-controller/concepts/annotations/
+        # https://cert-manager.io/docs/usage/ingress/
+        annotations:
+          kubernetes.io/ingress.class: ${var.ingress_class_name}
+          k8s.apisix.apache.org/enable-cors: "true"
+          %{~ if coalesce(var.uptrace_cert_manager_issuer, var.cert_manager_issuer, false) ~}
+          k8s.apisix.apache.org/http-to-https: "true"
+          cert-manager.io/cluster-issuer: ${coalesce(var.uptrace_cert_manager_issuer, var.cert_manager_issuer)}
+          %{ endif }
+        hosts:
+          - host: uptrace.${var.ingress_domain}
+            paths:
+              - path: /
+                pathType: Prefix
+        %{~ if coalesce(var.uptrace_cert_manager_issuer, var.cert_manager_issuer, false) ~}
+        tls:
+          - secretName: uptrace-${var.uptrace_namespace}-tls
+            hosts:
+              - uptrace.${var.ingress_domain}
+        %{ endif }
+      %{ endif }
+    EOT
+    ],
     var.uptrace_values
   )
 
@@ -641,6 +839,7 @@ module "qryn" {
   depends_on = [
     #module.eks,
     #module.addons
+    module.victoriametrics_operator
   ]
 
   create        = var.enable_qryn
@@ -656,6 +855,39 @@ module "qryn" {
 
   values = concat(
     [templatefile("${path.module}/universal_values.yaml", {})],
+    [
+    <<-EOT
+      %{ if var.enable_victoriametrics_operator == true }
+      serviceMonitor:
+        enabled: true
+      %{ endif }
+      %{ if var.qryn_ingress_enabled == true }
+      ingress:
+        enabled: true
+        className: ${var.ingress_class_name}
+        # https://apisix.apache.org/docs/ingress-controller/concepts/annotations/
+        # https://cert-manager.io/docs/usage/ingress/
+        annotations:
+          kubernetes.io/ingress.class: ${var.ingress_class_name}
+          k8s.apisix.apache.org/enable-cors: "true"
+          %{~ if coalesce(var.qryn_cert_manager_issuer, var.cert_manager_issuer, false) ~}
+          k8s.apisix.apache.org/http-to-https: "true"
+          cert-manager.io/cluster-issuer: ${coalesce(var.qryn_cert_manager_issuer, var.cert_manager_issuer)}
+          %{ endif }
+        hosts:
+          - host: qryn.${var.ingress_domain}
+            paths:
+              - path: /
+                pathType: ImplementationSpecific
+        %{~ if coalesce(var.qryn_cert_manager_issuer, var.cert_manager_issuer, false) ~}
+        tls:
+          - secretName: qryn-${var.qryn_namespace}-tls
+            hosts:
+              - qryn.${var.ingress_domain}
+        %{ endif }
+      %{ endif }
+    EOT
+    ],
     var.qryn_values
   )
 
@@ -689,6 +921,35 @@ module "openobserve" {
 
   values = concat(
     [templatefile("${path.module}/universal_values.yaml", {})],
+    [
+    <<-EOT
+      %{ if var.openobserve_ingress_enabled == true }
+      ingress:
+        enabled: true
+        className: ${var.ingress_class_name}
+        # https://apisix.apache.org/docs/ingress-controller/concepts/annotations/
+        # https://cert-manager.io/docs/usage/ingress/
+        annotations:
+          kubernetes.io/ingress.class: ${var.ingress_class_name}
+          k8s.apisix.apache.org/enable-cors: "true"
+          %{~ if coalesce(var.openobserve_cert_manager_issuer, var.cert_manager_issuer, false) ~}
+          k8s.apisix.apache.org/http-to-https: "true"
+          cert-manager.io/cluster-issuer: ${coalesce(var.openobserve_cert_manager_issuer, var.cert_manager_issuer)}
+          %{ endif }
+        hosts:
+          - host: openobserve.${var.ingress_domain}
+            paths:
+              - path: /
+                pathType: ImplementationSpecific
+        %{~ if coalesce(var.openobserve_cert_manager_issuer, var.cert_manager_issuer, false) ~}
+        tls:
+          - secretName: openobserve-${var.openobserve_namespace}-tls
+            hosts:
+              - openobserve.${var.ingress_domain}
+        %{ endif }
+      %{ endif }
+    EOT
+    ],
     var.openobserve_values
   )
 }
@@ -814,6 +1075,33 @@ module "kubernetes_dashboard" {
 
   values = concat(
     [templatefile("${path.module}/universal_values.yaml", {})],
+    [
+    <<-EOT
+    %{ if var.kubernetes_dashboard_ingress_enabled == true }
+    app:
+      ingress:
+        enabled: true
+        ingressClassName: ${var.ingress_class_name}
+        # https://apisix.apache.org/docs/ingress-controller/concepts/annotations/
+        # https://cert-manager.io/docs/usage/ingress/
+        annotations:
+          kubernetes.io/ingress.class: ${var.ingress_class_name}
+          k8s.apisix.apache.org/enable-cors: "true"
+          %{~ if coalesce(var.kubernetes_dashboard_cert_manager_issuer, var.cert_manager_issuer, false) ~}
+          k8s.apisix.apache.org/http-to-https: "true"
+          cert-manager.io/cluster-issuer: ${coalesce(var.kubernetes_dashboard_cert_manager_issuer, var.cert_manager_issuer)}
+          %{ endif }
+        hosts:
+          - k8s-dashboard.${var.ingress_domain}
+        %{~ if coalesce(var.kubernetes_dashboard_cert_manager_issuer, var.cert_manager_issuer, false) ~}
+        tls:
+          - secretName: kubernetes-dashboard-${var.kubernetes_dashboard_namespace}-tls
+            hosts:
+              - k8s-dashboard.${var.ingress_domain}
+        %{ endif }
+    %{ endif }
+    EOT
+    ],
     var.kubernetes_dashboard_values
   )
 }
