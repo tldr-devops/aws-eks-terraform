@@ -7,10 +7,12 @@ Setup basic EKS cluster with necessary controllers. Examples for further configu
 
 ## Depend on
 - terraform
-- helm
+- aws cli
 - kubectl
 - [terraform-aws-eks](https://github.com/terraform-aws-modules/terraform-aws-eks)
 - [aws-ia/eks-blueprints-addons/aws](https://github.com/aws-ia/terraform-aws-eks-blueprints-addons)
+
+This module contain local-exec block with `kubectl patch` for applying `tolerations` and `nodeSelector` deployments in `kube-system` namespace, that will work only in unix shell, so it will fail on Windows. This patch is necessary as some of eks addons currently doesn't support `tolerations` and `nodeSelector` in their configurations, but only necessary if you will use host nodes with taints to separate `management` processes from other. You can disable it by set `apply_kubectl_patch` variable to `false`.
 
 ## Example
 ```
@@ -20,6 +22,8 @@ terraform apply -target=module.vpc
 terraform apply
 terraform output all
 ```
+
+After `terraform destroy` check ec2 volumes for unused disks as aws-ebs-csi-driver doesn't delete it by default after deleting helm releases.
 
 ## Security
 

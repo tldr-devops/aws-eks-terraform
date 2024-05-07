@@ -35,6 +35,8 @@ data "aws_subnets" "vpc_subnets" {
 }
 
 locals {
+  kubeconfig = pathexpand("~/.kube/eks-${data.aws_caller_identity.current.account_id}-${data.aws_region.current.name}-${module.eks.cluster_name}")
+
   vpc_id = coalesce(var.vpc_id, data.aws_vpc.default.id)
 
   subnet_ids = coalesce(var.subnet_ids, data.aws_subnets.vpc_subnets.ids)
@@ -138,6 +140,6 @@ module "iam_eks_role" {
 
 resource "null_resource" "kubectl" {
     provisioner "local-exec" {
-        command = "aws eks --region ${data.aws_region.current.name} update-kubeconfig --name ${module.eks.cluster_name} --kubeconfig ~/.kube/eks-${data.aws_caller_identity.current.account_id}-${data.aws_region.current.name}-${module.eks.cluster_name}"
+        command = "aws eks --region ${data.aws_region.current.name} update-kubeconfig --name ${module.eks.cluster_name} --kubeconfig ${local.kubeconfig}"
     }
 }

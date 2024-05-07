@@ -167,3 +167,8 @@ output "self_managed_node_groups_autoscaling_group_names" {
   value       = module.eks.self_managed_node_groups_autoscaling_group_names
   description = "List of the autoscaling group names created by self-managed node groups"
 }
+
+output "kubeconfig" {
+  value       = local.kubeconfig
+  description = "Path to generated kube config file"
+}

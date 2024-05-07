@@ -67,7 +67,7 @@ variable "cluster_name" {
 variable "cluster_version" {
   description = "AWS EKS cluster version"
   type        = string
-  default     = "1.28"
+  default     = "1.29"
 }
 
 # https://github.com/aws-ia/terraform-aws-eks-blueprints-addons/blob/0e9d6c9b7115ecf0404c377c9c2529bffa56d10d/docs/amazon-eks-addons.md
@@ -215,6 +215,12 @@ variable "tags" {
   default     = { Terraform = "true" }
 }
 
+variable "apply_kubectl_patch" {
+  description = "Apply universal_values.yaml to all deployments in kube-system"
+  type        = bool
+  default     = true
+}
+
 # AWS EFS CSI DRIVER
 
 variable "enable_aws_efs_csi_driver" {
@@ -231,17 +237,17 @@ variable "aws_efs_csi_driver_config" {
 
 # AWS NODE TERMINATION HANDLER
 
-# variable "enable_aws_node_termination_handler" {
-#   description = "Install latest AWS node termination handler"
-#   type        = bool
-#   default     = true
-# }
-# 
-# variable "aws_node_termination_handler_config" {
-#   description = "AWS node termination handler configuration"
-#   type        = any
-#   default     = {}
-# }
+variable "enable_aws_node_termination_handler" {
+  description = "Install latest AWS node termination handler"
+  type        = bool
+  default     = true
+}
+
+variable "aws_node_termination_handler_config" {
+  description = "AWS node termination handler configuration"
+  type        = any
+  default     = {}
+}
 
 # CERT MANAGER
 

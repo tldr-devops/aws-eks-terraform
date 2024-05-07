@@ -227,12 +227,7 @@ locals {
 
   universal_cluster_addon_config = {
     most_recent = true
-    configuration_values = jsonencode({
-      nodeSelector = {
-        "kubernetes.io/os" = "linux"
-        "node.kubernetes.io/purpose" = "management"
-      }
-    })
+    configuration_values = jsonencode(yamldecode(file("${path.module}/universal_values.yaml")))
   }
 
   cluster_addons = merge(
@@ -256,21 +251,71 @@ locals {
     var.cluster_addons
   )
 
+  universal_values_string = templatefile("${path.module}/universal_values.yaml",  {})
   universal_addon_config = {
-    values = [templatefile("${path.module}/universal_values.yaml", {})]
+    values = [local.universal_values_string]
   }
 
-  aws_efs_csi_driver_config = merge(local.universal_addon_config, var.aws_efs_csi_driver_config)
+  # https://github.com/kubernetes-sigs/aws-efs-csi-driver/blob/master/charts/aws-efs-csi-driver/values.yaml
+  aws_efs_csi_driver_config = merge(
+    local.universal_addon_config,
+    {
+      values = [
+        <<-EOT
+          controller:
+            ${replace(local.universal_values_string, "\n", "\n  ")}
+        EOT
+      ]
+    },
+    var.aws_efs_csi_driver_config
+  )
 
-  # aws_node_termination_handler_config = merge(local.universal_addon_config, var.aws_node_termination_handler_config)
+  # https://github.com/aws/aws-node-termination-handler/blob/main/config/helm/aws-node-termination-handler/values.yaml
+  aws_node_termination_handler_config = merge(local.universal_addon_config, var.aws_node_termination_handler_config)
 
-  cert_manager_config = merge(local.universal_addon_config, var.cert_manager_config)
+  # https://github.com/cert-manager/cert-manager/blob/master/deploy/charts/cert-manager/values.yaml
+  cert_manager_config = merge(
+    local.universal_addon_config,
+    {
+      values = [
+        <<-EOT
+          webhook:
+            ${replace(local.universal_values_string, "\n", "\n  ")}
+          cainjector:
+            ${replace(local.universal_values_string, "\n", "\n  ")}
+          startupapicheck:
+            ${replace(local.universal_values_string, "\n", "\n  ")}
+        EOT
+      ]
+    },
+    var.cert_manager_config
+  )
 
+  # https://github.com/kubernetes/autoscaler/blob/master/charts/cluster-autoscaler/values.yaml
   cluster_autoscaler_config = merge(local.universal_addon_config, var.cluster_autoscaler_config)
 
+  # https://github.com/kubernetes-sigs/metrics-server/blob/master/charts/metrics-server/values.yaml
   metrics_server_config = merge(local.universal_addon_config, var.metrics_server_config)
 
-  vpa_config = merge(local.universal_addon_config, var.vpa_config)
+  # https://github.com/FairwindsOps/charts/blob/master/stable/vpa/values.yaml
+  vpa_config = merge(
+    local.universal_addon_config,
+    {
+      values = [
+        <<-EOT
+          recommender:
+            ${replace(local.universal_values_string, "\n", "\n  ")}
+          updater:
+            ${replace(local.universal_values_string, "\n", "\n  ")}
+          admissionController:
+            ${replace(local.universal_values_string, "\n", "\n  ")}
+          mutatingWebhookConfiguration:
+            ${replace(local.universal_values_string, "\n", "\n  ")}
+        EOT
+      ]
+    },
+    var.vpa_config
+  )
 
   # don't like using root password for monitoring agents but for speedup
   openobserve_authorization = try(base64encode("${var.admin_email}:${module.openobserve.zo_root_user_password}"), "")
@@ -350,12 +395,14 @@ module "addons" {
   eks_addons = local.cluster_addons
 
   # https://github.com/aws-ia/terraform-aws-eks-blueprints-addons/blob/0e9d6c9b7115ecf0404c377c9c2529bffa56d10d/docs/addons/aws-efs-csi-driver.md
+  # https://github.com/kubernetes-sigs/aws-efs-csi-driver/blob/master/charts/aws-efs-csi-driver/values.yaml
   enable_aws_efs_csi_driver = var.enable_aws_efs_csi_driver
   aws_efs_csi_driver = local.aws_efs_csi_driver_config
 
   # https://github.com/aws-ia/terraform-aws-eks-blueprints-addons/blob/0e9d6c9b7115ecf0404c377c9c2529bffa56d10d/docs/addons/aws-node-termination-handler.md
-  #enable_aws_node_termination_handler = var.enable_aws_node_termination_handler
-  #aws_node_termination_handler = local.aws_node_termination_handler_config
+  # https://github.com/aws/aws-node-termination-handler/blob/main/config/helm/aws-node-termination-handler/values.yaml
+  enable_aws_node_termination_handler = var.enable_aws_node_termination_handler
+  aws_node_termination_handler = local.aws_node_termination_handler_config
 
   # https://github.com/aws-ia/terraform-aws-eks-blueprints-addons/blob/0e9d6c9b7115ecf0404c377c9c2529bffa56d10d/docs/addons/cert-manager.md
   # https://github.com/cert-manager/cert-manager/blob/master/deploy/charts/cert-manager/values.yaml
@@ -363,18 +410,39 @@ module "addons" {
   cert_manager = local.cert_manager_config
 
   # https://github.com/aws-ia/terraform-aws-eks-blueprints-addons/blob/0e9d6c9b7115ecf0404c377c9c2529bffa56d10d/docs/addons/cluster-autoscaler.md
+  # https://github.com/kubernetes/autoscaler/blob/master/charts/cluster-autoscaler/values.yaml
   enable_cluster_autoscaler = var.enable_cluster_autoscaler
   cluster_autoscaler = local.cluster_autoscaler_config
 
   # https://github.com/aws-ia/terraform-aws-eks-blueprints-addons/blob/0e9d6c9b7115ecf0404c377c9c2529bffa56d10d/docs/addons/metrics-server.md
+  # https://github.com/kubernetes-sigs/metrics-server/blob/master/charts/metrics-server/values.yaml
   enable_metrics_server = var.enable_metrics_server
   metrics_server = local.metrics_server_config
 
   # https://github.com/aws-ia/terraform-aws-eks-blueprints-addons/blob/0e9d6c9b7115ecf0404c377c9c2529bffa56d10d/docs/addons/vertical-pod-autoscaler.md
+  # https://github.com/FairwindsOps/charts/blob/master/stable/vpa/values.yaml
   enable_vpa = var.enable_vpa
   vpa = local.vpa_config
 
   tags = var.tags
+}
+
+# patch addons and modules as some eks addons don't have tolerations
+resource "null_resource" "apply_kubectl_patch" {
+
+  count = var.apply_kubectl_patch? 1 : 0
+
+  depends_on = [
+    #module.eks,
+    module.addons
+  ]
+
+  provisioner "local-exec" {
+    command = <<-EOT
+      export KUBECONFIG="${module.eks.kubeconfig}"
+      kubectl get deployments -o name -n kube-system | xargs -I {} kubectl patch {} -n kube-system -p '{"spec": {"template":{"spec":${jsonencode(yamldecode(file("${path.module}/universal_values.yaml")))}}}}'
+    EOT
+  }
 }
 
 # https://cert-manager.io/docs/configuration/acme/
@@ -445,7 +513,7 @@ module "victoriametrics_operator" {
   tags          = var.tags
 
   values = concat(
-    [templatefile("${path.module}/universal_values.yaml", {})],
+    [local.universal_values_string],
     var.victoriametrics_operator_values
   )
 }
@@ -466,7 +534,7 @@ module "opentelemetry_operator" {
   tags          = var.tags
 
   values = concat(
-    [templatefile("${path.module}/universal_values.yaml", {})],
+    [local.universal_values_string],
     var.opentelemetry_operator_values
   )
 }
@@ -487,7 +555,7 @@ module "grafana_operator" {
   tags          = var.tags
 
   values = concat(
-    [templatefile("${path.module}/universal_values.yaml", {})],
+    [local.universal_values_string],
     var.grafana_operator_values
   )
 }
@@ -508,7 +576,7 @@ module "clickhouse_operator" {
   tags          = var.tags
 
   values = concat(
-    [templatefile("${path.module}/universal_values.yaml", {})],
+    [local.universal_values_string],
     var.clickhouse_operator_values
   )
 }
@@ -532,7 +600,7 @@ module "ingress_apisix" {
   tags          = var.tags
 
   values = concat(
-    [templatefile("${path.module}/universal_values.yaml", {})],
+    [local.universal_values_string],
     [
     <<-EOT
       %{ if var.enable_victoriametrics_operator == true }
@@ -572,7 +640,7 @@ module "victoriametrics" {
   grafana_operator_namespace    = var.grafana_operator_namespace
 
   values = concat(
-    [templatefile("${path.module}/universal_values.yaml", {})],
+    [local.universal_values_string],
     [
     <<-EOT
       %{ if var.enable_victoriametrics_operator == true }
@@ -647,7 +715,7 @@ module "victoriametrics" {
   auth_chart_version = var.victoriametrics_auth_chart_version
   auth_set           = var.victoriametrics_auth_set
   auth_values        = concat(
-    [templatefile("${path.module}/universal_values.yaml", {})],
+    [local.universal_values_string],
     [
     <<-EOT
       %{ if var.victoriametrics_auth_ingress_enabled == true }
@@ -719,7 +787,7 @@ module "grafana" {
   grafana_operator_namespace    = var.grafana_operator_namespace
 
   values = concat(
-    [templatefile("${path.module}/universal_values.yaml", {})],
+    [local.universal_values_string],
     [
     <<-EOT
       %{ if var.enable_victoriametrics_operator == true }
@@ -778,7 +846,7 @@ module "uptrace" {
   grafana_operator_namespace    = var.grafana_operator_namespace
 
   values = concat(
-    [templatefile("${path.module}/universal_values.yaml", {})],
+    [local.universal_values_string],
     [
     <<-EOT
       %{ if var.uptrace_ingress_enabled == true }
@@ -819,7 +887,7 @@ module "uptrace" {
   clickhouse_set           = var.uptrace_clickhouse_set
 
   clickhouse_values = concat(
-    [templatefile("${path.module}/universal_values.yaml", {})],
+    [local.universal_values_string],
     var.uptrace_clickhouse_values
   )
 
@@ -827,7 +895,7 @@ module "uptrace" {
   postgresql_set           = var.uptrace_postgresql_set
 
   postgresql_values = concat(
-    [templatefile("${path.module}/universal_values.yaml", {})],
+    [local.universal_values_string],
     var.uptrace_postgresql_values
   )
 }
@@ -854,7 +922,7 @@ module "qryn" {
   grafana_operator_namespace    = var.grafana_operator_namespace
 
   values = concat(
-    [templatefile("${path.module}/universal_values.yaml", {})],
+    [local.universal_values_string],
     [
     <<-EOT
       %{ if var.enable_victoriametrics_operator == true }
@@ -895,7 +963,7 @@ module "qryn" {
   clickhouse_set           = var.qryn_clickhouse_set
 
   clickhouse_values = concat(
-    [templatefile("${path.module}/universal_values.yaml", {})],
+    [local.universal_values_string],
     var.qryn_clickhouse_values
   )
 }
@@ -920,7 +988,7 @@ module "openobserve" {
   oidc_provider_arn     = module.eks.oidc_provider_arn
 
   values = concat(
-    [templatefile("${path.module}/universal_values.yaml", {})],
+    [local.universal_values_string],
     [
     <<-EOT
       %{ if var.openobserve_ingress_enabled == true }
@@ -974,7 +1042,7 @@ module "openobserve_collector" {
   zo_authorization = "Basic ${local.openobserve_authorization}"
 
   values = concat(
-    [templatefile("${path.module}/universal_values.yaml", {})],
+    [local.universal_values_string],
     var.openobserve_collector_values
   )
 }
@@ -992,7 +1060,7 @@ module "vector_agent" {
   tags          = var.tags
 
   values = concat(
-    [templatefile("${path.module}/universal_values.yaml", {})],
+    [local.universal_values_string],
     [
     <<-EOT
       role: "Agent"
@@ -1074,7 +1142,7 @@ module "kubernetes_dashboard" {
   tags          = var.tags
 
   values = concat(
-    [templatefile("${path.module}/universal_values.yaml", {})],
+    [local.universal_values_string],
     [
     <<-EOT
     %{ if var.kubernetes_dashboard_ingress_enabled == true }

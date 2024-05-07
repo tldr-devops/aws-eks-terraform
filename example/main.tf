@@ -8,6 +8,8 @@ locals {
   ingress_domain      = "cluster.local"
   cert_manager_issuer = ""
 
+  cluster_version     = "1.29"
+
   vpc_name = "eks_${local.cluster_name}"
   azs = data.aws_availability_zones.available.names
   cidr = "10.0.0.0/16"
@@ -129,6 +131,7 @@ module "eks" {
   source = "../"
 
   cluster_name                                    = local.cluster_name
+  cluster_version                                 = local.cluster_version
   admin_email                                     = local.admin_email
   ingress_domain                                  = local.ingress_domain
   cert_manager_issuer                             = local.cert_manager_issuer
@@ -145,22 +148,23 @@ module "eks" {
   fargate_profiles                                = local.fargate_profiles
   tags                                            = local.tags
 
-  enable_aws_efs_csi_driver       = true
-  enable_cert_manager             = true
-  enable_cluster_autoscaler       = true
-  enable_metrics_server           = true
-  enable_vpa                      = true
-  enable_ingress_apisix           = true
-  enable_victoriametrics_operator = true
-  enable_opentelemetry_operator   = true
-  enable_clickhouse_operator      = true
-  enable_grafana_operator         = true
-  enable_victoriametrics          = true
-  enable_grafana                  = true
-  enable_uptrace                  = true
-  enable_vector_agent             = true
-  enable_qryn                     = false
-  enable_openobserve              = false
-  enable_openobserve_collector    = false
-  enable_kubernetes_dashboard     = false
+  enable_aws_efs_csi_driver           = true
+  enable_aws_node_termination_handler = false
+  enable_cert_manager                 = true
+  enable_cluster_autoscaler           = true
+  enable_metrics_server               = true
+  enable_vpa                          = true
+  enable_ingress_apisix               = true
+  enable_victoriametrics_operator     = true
+  enable_opentelemetry_operator       = true
+  enable_clickhouse_operator          = true
+  enable_grafana_operator             = true
+  enable_victoriametrics              = true
+  enable_grafana                      = true
+  enable_uptrace                      = true
+  enable_vector_agent                 = true
+  enable_qryn                         = false
+  enable_openobserve                  = false
+  enable_openobserve_collector        = false
+  enable_kubernetes_dashboard         = false
 }
