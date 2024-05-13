@@ -1,25 +1,27 @@
+locals {
+  # https://github.com/open-telemetry/opentelemetry-helm-charts/blob/main/charts/opentelemetry-operator/values.yaml
+  values = [
+      <<-EOT
+        manager:
+          collectorImage:
+            repository: "otel/opentelemetry-collector-k8s"
+        admissionWebhooks:
+          certManager:
+            enabled: false
+      EOT
+    ]
+}
+
 module "opentelemetry_operator" {
   source = "aws-ia/eks-blueprints-addon/aws"
   version = "~> 1.1"
 
-  set = concat(
-    [
-      {
-        name  = "admissionWebhooks.certManager.enabled"
-        value = "false"
-      },
-
-# Error: values don't meet the specifications of the schema(s) in the following chart(s):
-# │ opentelemetry-operator:
-# │ - admissionWebhooks.certManager: Additional property autoGenerateCert is not allowed
-#       {
-#         name  = "admissionWebhooks.certManager.autoGenerateCert.enabled"
-#         value = "true"
-#       },
-
-    ],
-    var.set
+  values = concat(
+    local.values,
+    var.values
   )
+
+  set = var.set
 
   create = var.create
   tags = var.tags
@@ -31,7 +33,6 @@ module "opentelemetry_operator" {
   chart = var.chart
   chart_version = var.chart_version
   repository = var.repository
-  values = var.values
   timeout = var.timeout
   repository_key_file = var.repository_key_file
   repository_cert_file = var.repository_cert_file

@@ -535,6 +535,15 @@ module "opentelemetry_operator" {
 
   values = concat(
     [local.universal_values_string],
+    [
+    <<-EOT
+      %{ if var.enable_victoriametrics_operator == true }
+      manager:
+        serviceMonitor:
+          enabled: true
+      %{ endif }
+    EOT
+    ],
     var.opentelemetry_operator_values
   )
 }
