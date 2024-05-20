@@ -228,7 +228,7 @@ module "auth" {
   version = "~> 1.1"
 
   depends_on = [
-    #module.victoriametrics,
+    module.victoriametrics,
     #module.kubernetes_manifests
   ]
 

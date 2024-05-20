@@ -71,9 +71,15 @@ variable "cluster_version" {
 }
 
 # https://github.com/aws-ia/terraform-aws-eks-blueprints-addons/blob/0e9d6c9b7115ecf0404c377c9c2529bffa56d10d/docs/amazon-eks-addons.md
-variable "cluster_addons" {
+variable "eks_addons" {
   description = "AWS EKS cluster addons map, default is latest coredns, kube-proxy, vpc-cni, aws-ebs-csi-driver, snapshot-controller"
   type        = any
+  default     = {}
+}
+
+variable "eks_addons_timeouts" {
+  description = "Create, update, and delete timeout configurations for the EKS add-ons"
+  type        = map(string)
   default     = {}
 }
 
@@ -249,6 +255,19 @@ variable "aws_node_termination_handler_config" {
   default     = {}
 }
 
+variable "aws_node_termination_handler_sqs" {
+  description = "AWS Node Termination Handler SQS queue configuration values"
+  type        = any
+  default     = {}
+}
+
+variable "aws_node_termination_handler_asg_arns" {
+  description = "List of Auto Scaling group ARNs that AWS Node Termination Handler will monitor for EC2 events"
+  type        = list(string)
+  default     = []
+}
+
+
 # CERT MANAGER
 
 variable "enable_cert_manager" {
@@ -261,6 +280,12 @@ variable "cert_manager_config" {
   description = "Cert manager configuration"
   type        = any
   default     = {}
+}
+
+variable "cert_manager_route53_hosted_zone_arns" {
+  description = "List of Route53 Hosted Zone ARNs that are used by cert-manager to create DNS records"
+  type        = list(string)
+  default     = ["arn:aws:route53:::hostedzone/*"]
 }
 
 # CLUSTER AUTOSCALER

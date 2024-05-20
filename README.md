@@ -23,6 +23,18 @@ terraform apply
 terraform output all
 ```
 
+to destroy everything run (you may need to run it twice one by one)
+```
+terraform destroy -auto-approve
+```
+
+force destroy in case of problems
+```
+helm ls -a --all-namespaces | awk 'NR > 1 { print  "-n "$2, $1}' | xargs -L1 helm delete
+kubectl delete all --all --all-namespaces
+terraform destroy -auto-approve
+```
+
 After `terraform destroy` check ec2 volumes for unused disks as aws-ebs-csi-driver doesn't delete it by default after deleting helm releases.
 
 ## Security

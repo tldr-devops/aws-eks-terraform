@@ -230,7 +230,7 @@ locals {
     configuration_values = jsonencode(yamldecode(file("${path.module}/universal_values.yaml")))
   }
 
-  cluster_addons = merge(
+  eks_addons = merge(
     {
       coredns = local.universal_cluster_addon_config
       kube-proxy = {
@@ -248,7 +248,7 @@ locals {
         most_recent = true
       }
     },
-    var.cluster_addons
+    var.eks_addons
   )
 
   universal_values_string = templatefile("${path.module}/universal_values.yaml",  {})
@@ -260,6 +260,7 @@ locals {
   aws_efs_csi_driver_config = merge(
     local.universal_addon_config,
     {
+      reset_values = true
       values = [
         <<-EOT
           controller:
@@ -271,12 +272,22 @@ locals {
   )
 
   # https://github.com/aws/aws-node-termination-handler/blob/main/config/helm/aws-node-termination-handler/values.yaml
-  aws_node_termination_handler_config = merge(local.universal_addon_config, var.aws_node_termination_handler_config)
+  aws_node_termination_handler_config = merge(
+    local.universal_addon_config,
+    {reset_values = true},
+    var.aws_node_termination_handler_config
+  )
+  aws_node_termination_handler_asg_arns = concat(
+    [for asg in module.eks.self_managed_node_groups : asg.autoscaling_group_arn],
+    [for asg in module.eks.eks_managed_node_groups : asg.autoscaling_group_arn],
+    var.aws_node_termination_handler_asg_arns
+  )
 
   # https://github.com/cert-manager/cert-manager/blob/master/deploy/charts/cert-manager/values.yaml
   cert_manager_config = merge(
     local.universal_addon_config,
     {
+      reset_values = true
       values = [
         <<-EOT
           webhook:
@@ -292,15 +303,24 @@ locals {
   )
 
   # https://github.com/kubernetes/autoscaler/blob/master/charts/cluster-autoscaler/values.yaml
-  cluster_autoscaler_config = merge(local.universal_addon_config, var.cluster_autoscaler_config)
+  cluster_autoscaler_config = merge(
+    local.universal_addon_config,
+    {reset_values = true},
+    var.cluster_autoscaler_config
+  )
 
   # https://github.com/kubernetes-sigs/metrics-server/blob/master/charts/metrics-server/values.yaml
-  metrics_server_config = merge(local.universal_addon_config, var.metrics_server_config)
+  metrics_server_config = merge(
+    local.universal_addon_config,
+    {reset_values = true},
+    var.metrics_server_config
+  )
 
   # https://github.com/FairwindsOps/charts/blob/master/stable/vpa/values.yaml
   vpa_config = merge(
     local.universal_addon_config,
     {
+      reset_values = true
       values = [
         <<-EOT
           recommender:
@@ -392,37 +412,41 @@ module "addons" {
   cluster_version   = module.eks.cluster_version
   oidc_provider_arn = module.eks.oidc_provider_arn
 
-  eks_addons = local.cluster_addons
+  eks_addons          = local.eks_addons
+  eks_addons_timeouts = var.eks_addons_timeouts
 
   # https://github.com/aws-ia/terraform-aws-eks-blueprints-addons/blob/0e9d6c9b7115ecf0404c377c9c2529bffa56d10d/docs/addons/aws-efs-csi-driver.md
   # https://github.com/kubernetes-sigs/aws-efs-csi-driver/blob/master/charts/aws-efs-csi-driver/values.yaml
   enable_aws_efs_csi_driver = var.enable_aws_efs_csi_driver
-  aws_efs_csi_driver = local.aws_efs_csi_driver_config
+  aws_efs_csi_driver        = local.aws_efs_csi_driver_config
 
   # https://github.com/aws-ia/terraform-aws-eks-blueprints-addons/blob/0e9d6c9b7115ecf0404c377c9c2529bffa56d10d/docs/addons/aws-node-termination-handler.md
   # https://github.com/aws/aws-node-termination-handler/blob/main/config/helm/aws-node-termination-handler/values.yaml
-  enable_aws_node_termination_handler = var.enable_aws_node_termination_handler
-  aws_node_termination_handler = local.aws_node_termination_handler_config
+  enable_aws_node_termination_handler   = var.enable_aws_node_termination_handler
+  aws_node_termination_handler          = local.aws_node_termination_handler_config
+  aws_node_termination_handler_sqs      = var.aws_node_termination_handler_sqs
+  aws_node_termination_handler_asg_arns = local.aws_node_termination_handler_asg_arns
 
   # https://github.com/aws-ia/terraform-aws-eks-blueprints-addons/blob/0e9d6c9b7115ecf0404c377c9c2529bffa56d10d/docs/addons/cert-manager.md
   # https://github.com/cert-manager/cert-manager/blob/master/deploy/charts/cert-manager/values.yaml
-  enable_cert_manager = var.enable_cert_manager
-  cert_manager = local.cert_manager_config
+  enable_cert_manager                   = var.enable_cert_manager
+  cert_manager                          = local.cert_manager_config
+  cert_manager_route53_hosted_zone_arns = var.cert_manager_route53_hosted_zone_arns
 
   # https://github.com/aws-ia/terraform-aws-eks-blueprints-addons/blob/0e9d6c9b7115ecf0404c377c9c2529bffa56d10d/docs/addons/cluster-autoscaler.md
   # https://github.com/kubernetes/autoscaler/blob/master/charts/cluster-autoscaler/values.yaml
   enable_cluster_autoscaler = var.enable_cluster_autoscaler
-  cluster_autoscaler = local.cluster_autoscaler_config
+  cluster_autoscaler        = local.cluster_autoscaler_config
 
   # https://github.com/aws-ia/terraform-aws-eks-blueprints-addons/blob/0e9d6c9b7115ecf0404c377c9c2529bffa56d10d/docs/addons/metrics-server.md
   # https://github.com/kubernetes-sigs/metrics-server/blob/master/charts/metrics-server/values.yaml
   enable_metrics_server = var.enable_metrics_server
-  metrics_server = local.metrics_server_config
+  metrics_server        = local.metrics_server_config
 
   # https://github.com/aws-ia/terraform-aws-eks-blueprints-addons/blob/0e9d6c9b7115ecf0404c377c9c2529bffa56d10d/docs/addons/vertical-pod-autoscaler.md
   # https://github.com/FairwindsOps/charts/blob/master/stable/vpa/values.yaml
   enable_vpa = var.enable_vpa
-  vpa = local.vpa_config
+  vpa        = local.vpa_config
 
   tags = var.tags
 }

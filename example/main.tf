@@ -6,6 +6,7 @@ locals {
   cluster_name        = "test"
   admin_email         = "test@test.com"
   ingress_domain      = "cluster.local"
+  ingress_class_name  = "apisix" # or "nginx"
   cert_manager_issuer = ""
 
   cluster_version     = "1.29"
@@ -41,6 +42,8 @@ locals {
         "node.kubernetes.io/purpose" = "management"
       }
 
+# multiple pods don't have tolerations yet
+# including snapshot-controller plugin that can't be changed at all
 #       taints = {
 #         purpose = {
 #           key    = "node.kubernetes.io/purpose"
@@ -149,7 +152,7 @@ module "eks" {
   tags                                            = local.tags
 
   enable_aws_efs_csi_driver           = true
-  enable_aws_node_termination_handler = false
+  enable_aws_node_termination_handler = true
   enable_cert_manager                 = true
   enable_cluster_autoscaler           = true
   enable_metrics_server               = true
