@@ -14,13 +14,11 @@ This doesn't work
     vmsingle-victoria-metrics-k8s-stack-59d857bcd4-2kzbz
     vpa-certgen-46hz6
 
-## update opentelemetry-operator
+## qryn failing under load and return 401
 
- Error: execution error at (opentelemetry-operator/templates/NOTES.txt:2:3): [ERROR] 'manager.collectorImage.repository' must be set. See https://github.com/open-telemetry/opentelemetry-helm-charts/blob/main/charts/opentelemetry-operator/UPGRADING.md for instructions.
-│ 
-│   with module.eks.module.opentelemetry_operator[0].module.opentelemetry_operator.helm_release.this[0],
-│   on .terraform/modules/eks.opentelemetry_operator.opentelemetry_operator/main.tf line 9, in resource "helm_release" "this":
-│    9: resource "helm_release" "this" {
+## vector can't validate loki qryn config because of missing `encoding` and `labels` xD
+
+## openobserve looking for nginx hook and custom ingress doesn't work after latest update
 
 ## Problem with fargate
 

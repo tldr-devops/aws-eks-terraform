@@ -19,7 +19,7 @@ locals {
           cpu: 1000m
           memory: 1024Mi
       env:
-        CLICKHOUSE_SERVER: "clickhouse"
+        CLICKHOUSE_SERVER: "${var.clickhouse_name}"
         CLICKHOUSE_PORT: "8123"
         CLICKHOUSE_DB: "qryn"
         CLICKHOUSE_AUTH: "default:${random_password.clickhouse_password.result}"
@@ -380,7 +380,7 @@ module "grafana_operator_datasource" {
             type: prometheus
             access: proxy
             basicAuth: true
-            url: "http://${module.qryn.chart.qryn}.${module.qryn.namespace.qryn}.svc:3100"
+            url: "http://${module.qryn.chart}.${module.qryn.namespace}.svc:3100"
             isDefault: false
             user: "$${username}"
             jsonData:

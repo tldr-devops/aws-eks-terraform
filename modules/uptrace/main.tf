@@ -19,14 +19,14 @@ locals {
       uptrace:
         config:
           ch:
-            addr: clickhouse:9000
+            addr: "${var.clickhouse_name}:9000"
             user: default
             password: "${random_password.clickhouse_password.result}"
             database: uptrace
 
           # PostgreSQL db that is used to store metadata such us metric names, dashboards, alerts, etc
           pg:
-            addr: postgresql:5432
+            addr: "${var.postgresql_name}:5432"
             user: uptrace
             password: "${random_password.postgresql_password.result}"
             database: uptrace

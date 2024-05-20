@@ -260,7 +260,8 @@ locals {
   aws_efs_csi_driver_config = merge(
     local.universal_addon_config,
     {
-      reset_values = true
+      chart_version = null
+      reset_values  = true
       values = [
         <<-EOT
           controller:
@@ -274,12 +275,14 @@ locals {
   # https://github.com/aws/aws-node-termination-handler/blob/main/config/helm/aws-node-termination-handler/values.yaml
   aws_node_termination_handler_config = merge(
     local.universal_addon_config,
-    {reset_values = true},
+    {
+      chart_version = null
+      reset_values  = true
+    },
     var.aws_node_termination_handler_config
   )
   aws_node_termination_handler_asg_arns = concat(
     [for asg in module.eks.self_managed_node_groups : asg.autoscaling_group_arn],
-    [for asg in module.eks.eks_managed_node_groups : asg.autoscaling_group_arn],
     var.aws_node_termination_handler_asg_arns
   )
 
@@ -287,7 +290,8 @@ locals {
   cert_manager_config = merge(
     local.universal_addon_config,
     {
-      reset_values = true
+      chart_version = null
+      reset_values  = true
       values = [
         <<-EOT
           webhook:
@@ -305,14 +309,20 @@ locals {
   # https://github.com/kubernetes/autoscaler/blob/master/charts/cluster-autoscaler/values.yaml
   cluster_autoscaler_config = merge(
     local.universal_addon_config,
-    {reset_values = true},
+    {
+      chart_version = null
+      reset_values  = true
+    },
     var.cluster_autoscaler_config
   )
 
   # https://github.com/kubernetes-sigs/metrics-server/blob/master/charts/metrics-server/values.yaml
   metrics_server_config = merge(
     local.universal_addon_config,
-    {reset_values = true},
+    {
+      chart_version = null
+      reset_values  = true
+    },
     var.metrics_server_config
   )
 
@@ -320,7 +330,8 @@ locals {
   vpa_config = merge(
     local.universal_addon_config,
     {
-      reset_values = true
+      chart_version = null
+      reset_values  = true
       values = [
         <<-EOT
           recommender:
@@ -549,6 +560,7 @@ module "opentelemetry_operator" {
   depends_on = [
     #module.eks,
     #module.addons
+    module.victoriametrics_operator
   ]
 
   create        = var.enable_opentelemetry_operator
@@ -614,7 +626,7 @@ module "clickhouse_operator" {
   )
 }
 
-# INGRESS APISIX
+# INGRESS
 
 module "ingress_apisix" {
   source = "./modules/apisix"
@@ -627,7 +639,7 @@ module "ingress_apisix" {
   ]
 
   create        = var.enable_ingress_apisix
-  chart_version = can(var.ingress_apisix_chart_version) ? var.ingress_apisix_chart_version : null
+  chart_version = var.ingress_apisix_chart_version
   namespace     = var.ingress_apisix_namespace
   set           = var.ingress_apisix_set
   tags          = var.tags
@@ -644,6 +656,47 @@ module "ingress_apisix" {
     EOT
     ],
     var.ingress_apisix_values
+  )
+}
+
+module "ingress_nginx" {
+  source = "./modules/nginx"
+  count = var.enable_ingress_nginx ? 1 : 0
+
+  depends_on = [
+    #module.eks,
+    #module.addons
+    module.victoriametrics_operator
+  ]
+
+  create        = var.enable_ingress_nginx
+  chart_version = var.ingress_nginx_chart_version
+  namespace     = var.ingress_nginx_namespace
+  set           = var.ingress_nginx_set
+  tags          = var.tags
+
+  values = concat(
+    [
+    <<-EOT
+      controller:
+        ${replace(local.universal_values_string, "\n", "\n  ")}
+      defaultBackend:
+        ${replace(local.universal_values_string, "\n", "\n  ")}
+    EOT
+    ],
+    [
+    <<-EOT
+      %{ if var.enable_victoriametrics_operator == true }
+      controller:
+        metrics:
+          serviceMonitor:
+            enabled: true
+            namespace: "${var.ingress_nginx_namespace}"
+            scrapeInterval: 30s # default
+      %{ endif }
+    EOT
+    ],
+    var.ingress_nginx_values
   )
 }
 
@@ -717,28 +770,27 @@ module "victoriametrics" {
             - secretName: grafana-${var.victoriametrics_namespace}-tls
               hosts:
               - grafana.${var.ingress_domain}
+          %{ else }
+          tls: []
           %{ endif }
       %{ endif }
       %{ endif }
     EOT
     ,
     <<-EOT
-      %{ if var.enable_uptrace == true }
+      %{ if var.enable_uptrace == true || var.enable_qryn == true }
       vmagent:
         # https://docs.victoriametrics.com/operator/api/#vmagentremotewritespec
         # https://uptrace.dev/get/ingest/prometheus.html#prometheus-remote-write
         additionalRemoteWrites:
+          %{ if var.enable_uptrace == true }
           - url: "http://${module.uptrace[0].chart.uptrace}.${module.uptrace[0].namespace.uptrace}.svc:14318/api/v1/prometheus/write"
             headers:
               - "uptrace-dsn: http://${module.uptrace[0].project_tokens[1]}@${module.uptrace[0].chart.uptrace}.${module.uptrace[0].namespace.uptrace}.svc:14318/2?grpc=14317"
-      %{ endif }
-    EOT
-    ,
-    <<-EOT
-      %{ if var.enable_qryn == true }
-      vmagent:
-        additionalRemoteWrites:
+          %{ endif }
+          %{ if var.enable_qryn == true }
           - url: "http://${var.admin_email}:${module.qryn[0].root_password}@${module.qryn[0].chart.qryn}.${module.qryn[0].namespace.qryn}.svc:3100/api/v1/write"
+          %{ endif }
       %{ endif }
     EOT
     ],
@@ -789,6 +841,8 @@ module "victoriametrics" {
               - vmalertmanager.${var.ingress_domain}
               - vmagent.${var.ingress_domain}
               - vmalert.${var.ingress_domain}
+        %{ else }
+        tls: []
         %{ endif }
       %{ endif }
     EOT
@@ -803,8 +857,8 @@ module "grafana" {
   count = var.enable_grafana ? 1 : 0
 
   depends_on = [
-#     module.eks,
-#     module.addons,
+    #module.eks,
+    #module.addons,
     module.grafana_operator,
     module.victoriametrics_operator
   ]
@@ -847,6 +901,8 @@ module "grafana" {
           - secretName: grafana-${var.grafana_namespace}-tls
             hosts:
               - grafana.${var.ingress_domain}
+        %{ else }
+        tls: []
         %{ endif }
       %{ endif }
     EOT
@@ -909,6 +965,8 @@ module "uptrace" {
           - secretName: uptrace-${var.uptrace_namespace}-tls
             hosts:
               - uptrace.${var.ingress_domain}
+        %{ else }
+        tls: []
         %{ endif }
       %{ endif }
     EOT
@@ -985,6 +1043,8 @@ module "qryn" {
           - secretName: qryn-${var.qryn_namespace}-tls
             hosts:
               - qryn.${var.ingress_domain}
+        %{ else }
+        tls: []
         %{ endif }
       %{ endif }
     EOT
@@ -1047,6 +1107,8 @@ module "openobserve" {
           - secretName: openobserve-${var.openobserve_namespace}-tls
             hosts:
               - openobserve.${var.ingress_domain}
+        %{ else }
+        tls: []
         %{ endif }
       %{ endif }
     EOT
@@ -1145,6 +1207,8 @@ module "vector_agent" {
             type: "loki"
             inputs:
               - kubernetes_logs
+            encoding:
+              codec: "json"
             endpoint: "http://${module.qryn[0].chart.qryn}.${module.qryn[0].namespace.qryn}.svc:3100"
             auth:
               strategy: "basic"
@@ -1199,6 +1263,8 @@ module "kubernetes_dashboard" {
           - secretName: kubernetes-dashboard-${var.kubernetes_dashboard_namespace}-tls
             hosts:
               - k8s-dashboard.${var.ingress_domain}
+        %{ else }
+        tls: []
         %{ endif }
     %{ endif }
     EOT

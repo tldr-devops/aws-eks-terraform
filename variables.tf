@@ -362,6 +362,38 @@ variable "ingress_apisix_values" {
   default     = [""]
 }
 
+# INGRESS NGINX
+
+variable "enable_ingress_nginx" {
+  description = "Install ingress Nginx"
+  type        = bool
+  default     = false
+}
+
+variable "ingress_nginx_chart_version" {
+  description = "Ingress Nginx chart version"
+  type        = string
+  default     = null
+}
+
+variable "ingress_nginx_namespace" {
+  description = "Ingress Nginx namespace"
+  type        = string
+  default     = "ingress-nginx"
+}
+
+variable "ingress_nginx_set" {
+  description = "Ingress Nginx helm value block with custom values to be merged with the values yaml"
+  type        = any
+  default     = []
+}
+
+variable "ingress_nginx_values" {
+  description = "Ingress Nginx list of values in raw yaml to pass to helm. Values will be merged, in order, as Helm does with multiple `-f` options"
+  type        = list(string)
+  default     = [""]
+}
+
 # VICTORIAMETRICS OPERATOR
 
 variable "enable_victoriametrics_operator" {

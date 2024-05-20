@@ -137,7 +137,7 @@ module "role" {
  # IAM role for service account (IRSA)
   create_role = true
   create_policy = false
-  role_name   = "${aws_s3_bucket.openobserve.id}"
+  role_name   = "openobserve"
   role_policies = merge(
     {
       openobserve = aws_iam_policy.openobserve.arn

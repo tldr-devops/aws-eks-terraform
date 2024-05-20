@@ -7,7 +7,7 @@ locals {
   admin_email         = "test@test.com"
   ingress_domain      = "cluster.local"
   ingress_class_name  = "apisix" # or "nginx"
-  cert_manager_issuer = ""
+  cert_manager_issuer = "" # you can set to "letsencrypt-staging" or "letsencrypt-prod" after configuring dns records
 
   cluster_version     = "1.29"
 
@@ -42,15 +42,16 @@ locals {
         "node.kubernetes.io/purpose" = "management"
       }
 
-# multiple pods don't have tolerations yet
-# including snapshot-controller plugin that can't be changed at all
-#       taints = {
-#         purpose = {
-#           key    = "node.kubernetes.io/purpose"
-#           value  = "management"
-#           effect = "NO_SCHEDULE"
-#         }
-#       }
+    # multiple pods don't have tolerations yet
+    # including snapshot-controller plugin that can't be changed at all
+    #   taints = {
+    #     purpose = {
+    #       key    = "node.kubernetes.io/purpose"
+    #       value  = "management"
+    #       effect = "NO_SCHEDULE"
+    #     }
+    #   }
+
     }
   }
 
@@ -70,28 +71,16 @@ locals {
 #       aws-node-termination-handler = {}
   }
 
-  # or in all cluster networks and availability zones
-  self_managed_node_groups = {}
-
-  eks_managed_node_groups = {
-#     management = {
-#       min_size     = 0
-#       desired_size = 0
-# 
-#       labels = {
-#         "node.kubernetes.io/purpose" = "management"
-#       }
-# 
-#       taints = {
-#         purpose = {
-#           key    = "node.kubernetes.io/purpose"
-#           value  = "management"
-#           effect = "NO_SCHEDULE"
-#         }
-#       }
+  # Groups in all cluster networks and availability zones
+  self_managed_node_groups = {
+#     nth_test = {
+#       min_size       = 0
+#       desired_size   = 0
+#       max_size       = 1
+#       instance_types = ["t3.nano"]
 #     }
   }
-
+  eks_managed_node_groups = {}
   fargate_profiles = {}
 
   tags = {
@@ -137,6 +126,7 @@ module "eks" {
   cluster_version                                 = local.cluster_version
   admin_email                                     = local.admin_email
   ingress_domain                                  = local.ingress_domain
+  ingress_class_name                              = local.ingress_class_name
   cert_manager_issuer                             = local.cert_manager_issuer
   vpc_id                                          = module.vpc.vpc_id
   number_of_multi_az                              = local.number_of_multi_az
@@ -158,6 +148,7 @@ module "eks" {
   enable_metrics_server               = true
   enable_vpa                          = true
   enable_ingress_apisix               = true
+  enable_ingress_nginx                = false
   enable_victoriametrics_operator     = true
   enable_opentelemetry_operator       = true
   enable_clickhouse_operator          = true

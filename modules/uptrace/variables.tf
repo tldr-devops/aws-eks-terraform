@@ -335,7 +335,7 @@ variable "clickhouse_create_release" {
 variable "clickhouse_name" {
   description = "Name of the Helm release"
   type        = string
-  default     = ""
+  default     = "uptrace-clickhouse"
 }
 
 variable "clickhouse_description" {
@@ -561,7 +561,7 @@ variable "postgresql_create_release" {
 variable "postgresql_name" {
   description = "Name of the Helm release"
   type        = string
-  default     = ""
+  default     = "uptrace-postgresql"
 }
 
 variable "postgresql_description" {

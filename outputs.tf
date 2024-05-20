@@ -10,6 +10,10 @@ output "apisix" {
   value       = try(module.ingress_apisix, null)
 }
 
+output "nginx" {
+  value       = try(module.ingress_nginx, null)
+}
+
 output "victoriametrics_operator" {
   value       = try(module.victoriametrics_operator, null)
 }
