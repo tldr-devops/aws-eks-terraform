@@ -30,5 +30,5 @@ output "app_version" {
 
 output "apisix_admin_key" {
   description = "The apisix admin key"
-  value       = random_password.apisix_admin_key
+  value       = random_password.apisix_admin_key.result
 }

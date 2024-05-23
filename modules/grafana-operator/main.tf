@@ -7,6 +7,8 @@ locals {
           enabled: true
       grafana:
         enabled: false
+      operator:
+        resourcesPreset: "none"
     EOT
   ]
 }

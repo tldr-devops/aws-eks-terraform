@@ -160,6 +160,7 @@ locals {
         annotations:
           eks.amazonaws.com/role-arn: ${module.role.iam_role_arn}
         automountServiceAccountToken: true
+      resourcesPreset: "none"
       metrics:
         enabled: true
       zookeeper:
@@ -286,6 +287,8 @@ locals {
         size: 1Gi
       readReplicas:
         replicaCount: 0
+      primary:
+        resourcesPreset: "none"
     EOT
   ]
 }
@@ -647,7 +650,7 @@ module "grafana_operator_datasource" {
             matchLabels:
               dashboards: "grafana"
           datasource:
-            name: "Uptrace-${var.namespace}"
+            name: "Uptrace-1-${var.namespace}"
             type: prometheus
             access: proxy
             url: "http://${module.uptrace.chart}.${module.uptrace.namespace}.svc:14318/api/prometheus"
@@ -674,7 +677,7 @@ module "grafana_operator_datasource" {
             matchLabels:
               dashboards: "grafana"
           datasource:
-            name: "Uptrace-Tempo-${var.namespace}"
+            name: "Uptrace-1-${var.namespace}-Tempo"
             type: tempo
             access: proxy
             url: "http://${module.uptrace.chart}.${module.uptrace.namespace}.svc:14318/api/tempo"
@@ -701,7 +704,7 @@ module "grafana_operator_datasource" {
             matchLabels:
               dashboards: "grafana"
           datasource:
-            name: "Uptrace-Monitoring-${var.namespace}"
+            name: "Uptrace-2-${var.namespace}"
             type: prometheus
             access: proxy
             url: "http://${module.uptrace.chart}.${module.uptrace.namespace}.svc:14318/api/prometheus"
@@ -728,7 +731,7 @@ module "grafana_operator_datasource" {
             matchLabels:
               dashboards: "grafana"
           datasource:
-            name: "Uptrace-Monitoring-Tempo-${var.namespace}"
+            name: "Uptrace-2-${var.namespace}-Tempo"
             type: tempo
             access: proxy
             url: "http://${module.uptrace.chart}.${module.uptrace.namespace}.svc:14318/api/tempo"

@@ -56,6 +56,7 @@ locals {
         annotations:
           eks.amazonaws.com/role-arn: ${module.role.iam_role_arn}
         automountServiceAccountToken: true
+      resourcesPreset: "none"
       metrics:
         enabled: true
       zookeeper:

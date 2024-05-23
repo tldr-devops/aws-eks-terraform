@@ -161,4 +161,42 @@ module "eks" {
   enable_openobserve                  = false
   enable_openobserve_collector        = false
   enable_kubernetes_dashboard         = false
+
+
+  # disable versions for install latest one
+  # and then set it from the terraform output
+  # to prevent unplanned upgrades
+
+  eks_addons = {
+    coredns             = {addon_version = "v1.11.1-eksbuild.9"}
+    kube-proxy          = {addon_version = "v1.29.3-eksbuild.2"}
+    vpc-cni             = {addon_version = "v1.18.1-eksbuild.3"}
+    aws-ebs-csi-driver  = {addon_version = "v1.30.0-eksbuild.1"}
+    snapshot-controller = {addon_version = "v7.0.1-eksbuild.1"}
+  }
+
+  aws_efs_csi_driver_config              = {chart_version = "3.0.3"}
+  aws_node_termination_handler_config    = {chart_version = "0.21.0"}
+  cert_manager_config                    = {chart_version = "v1.14.5"}
+  cluster_autoscaler_config              = {chart_version = "9.37.0"}
+  metrics_server_config                  = {chart_version = "3.12.1"}
+  vpa_config                             = {chart_version = "4.4.6"}
+
+  ingress_apisix_chart_version           = "0.14.0"
+  ingress_nginx_chart_version            = "4.10.1"
+  victoriametrics_operator_chart_version = "0.31.2"
+  opentelemetry_operator_chart_version   = "0.58.2"
+  clickhouse_operator_chart_version      = "0.23.5"
+  grafana_operator_chart_version         = "4.2.4"
+  victoriametrics_chart_version          = "0.22.1"
+  victoriametrics_auth_chart_version     = "0.4.12"
+  grafana_chart_version                  = "7.3.11"
+  uptrace_chart_version                  = "1.7.4"
+  uptrace_clickhouse_chart_version       = "6.0.7"
+  uptrace_postgresql_chart_version       = "15.3.3"
+  qryn_chart_version                     = "0.1.1"
+  qryn_clickhouse_chart_version          = "6.0.7"
+  openobserve_chart_name                 = "0.10.5"
+  openobserve_collector_chart_version    = "0.3.6"
+  kubernetes_dashboard_chart_version     = "7.4.0"
 }

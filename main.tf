@@ -433,7 +433,7 @@ module "addons" {
 
   # https://github.com/aws-ia/terraform-aws-eks-blueprints-addons/blob/0e9d6c9b7115ecf0404c377c9c2529bffa56d10d/docs/addons/aws-node-termination-handler.md
   # https://github.com/aws/aws-node-termination-handler/blob/main/config/helm/aws-node-termination-handler/values.yaml
-  enable_aws_node_termination_handler   = var.enable_aws_node_termination_handler
+  enable_aws_node_termination_handler   = var.enable_aws_node_termination_handler && length(local.aws_node_termination_handler_asg_arns) > 0
   aws_node_termination_handler          = local.aws_node_termination_handler_config
   aws_node_termination_handler_sqs      = var.aws_node_termination_handler_sqs
   aws_node_termination_handler_asg_arns = local.aws_node_termination_handler_asg_arns
