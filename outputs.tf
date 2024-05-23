@@ -2,8 +2,32 @@ output "eks" {
   value       = module.eks
 }
 
-output "addons" {
-  value       = module.addons
+output "aws_efs_csi_driver" {
+  value       = module.addons.aws_efs_csi_driver
+}
+
+output "aws_node_termination_handler" {
+  value       = module.addons.aws_node_termination_handler
+}
+
+output "cert_manager" {
+  value       = module.addons.cert_manager
+}
+
+output "cluster_autoscaler" {
+  value       = module.addons.cluster_autoscaler
+}
+
+output "eks_addons" {
+  value       = module.addons.eks_addons
+}
+
+output "metrics_server" {
+  value       = module.addons.metrics_server
+}
+
+output "vpa" {
+  value       = module.addons.vpa
 }
 
 output "apisix" {

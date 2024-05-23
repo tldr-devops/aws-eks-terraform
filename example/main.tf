@@ -196,6 +196,7 @@ module "eks" {
   uptrace_postgresql_chart_version       = "15.3.3"
   qryn_chart_version                     = "0.1.1"
   qryn_clickhouse_chart_version          = "6.0.7"
+  vector_agent_chart_version             = "0.33.0"
   openobserve_chart_name                 = "0.10.5"
   openobserve_collector_chart_version    = "0.3.6"
   kubernetes_dashboard_chart_version     = "7.4.0"

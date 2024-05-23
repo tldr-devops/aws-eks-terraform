@@ -1,0 +1,662 @@
+{
+  "aws_efs_csi_driver" = {
+    "app_version" = "2.0.2"
+    "chart" = "aws-efs-csi-driver"
+    "iam_policy" = "{\"Statement\":[{\"Action\":\"ec2:DescribeAvailabilityZones\",\"Effect\":\"Allow\",\"Resource\":\"*\",\"Sid\":\"AllowDescribeAvailabilityZones\"},{\"Action\":[\"elasticfilesystem:DescribeMountTargets\",\"elasticfilesystem:DescribeFileSystems\",\"elasticfilesystem:DescribeAccessPoints\"],\"Effect\":\"Allow\",\"Resource\":[\"arn:aws:elasticfilesystem:us-east-2:123456789012:file-system/*\",\"arn:aws:elasticfilesystem:us-east-2:123456789012:access-point/*\"],\"Sid\":\"AllowDescribeFileSystems\"},{\"Action\":[\"elasticfilesystem:TagResource\",\"elasticfilesystem:CreateAccessPoint\"],\"Condition\":{\"StringLike\":{\"aws:RequestTag/efs.csi.aws.com/cluster\":\"true\"}},\"Effect\":\"Allow\",\"Resource\":\"arn:aws:elasticfilesystem:us-east-2:123456789012:file-system/*\"},{\"Action\":\"elasticfilesystem:DeleteAccessPoint\",\"Condition\":{\"StringLike\":{\"aws:ResourceTag/efs.csi.aws.com/cluster\":\"true\"}},\"Effect\":\"Allow\",\"Resource\":\"arn:aws:elasticfilesystem:us-east-2:123456789012:access-point/*\",\"Sid\":\"AllowDeleteAccessPoint\"},{\"Action\":[\"elasticfilesystem:ClientWrite\",\"elasticfilesystem:ClientRootAccess\",\"elasticfilesystem:ClientMount\"],\"Condition\":{\"Bool\":{\"elasticfilesystem:AccessedViaMountTarget\":\"true\"}},\"Effect\":\"Allow\",\"Resource\":\"arn:aws:elasticfilesystem:us-east-2:123456789012:file-system/*\",\"Sid\":\"ClientReadWrite\"}],\"Version\":\"2012-10-17\"}"
+    "iam_policy_arn" = "arn:aws:iam::123456789012:policy/aws-efs-csi-driver-2024052016030372700000000a"
+    "iam_role_arn" = "arn:aws:iam::123456789012:role/aws-efs-csi-driver-2024052016144168910000003a"
+    "iam_role_name" = "aws-efs-csi-driver-2024052016144168910000003a"
+    "iam_role_path" = "/"
+    "iam_role_unique_id" = "AROA4DZC6W7AVOHPPDIJZ"
+    "name" = "aws-efs-csi-driver"
+    "namespace" = "kube-system"
+    "revision" = 1
+    "values" = "{\"controller\":{\"nodeSelector\":{\"kubernetes.io/os\":\"linux\",\"node.kubernetes.io/purpose\":\"management\"},\"serviceAccount\":{\"annotations\":{\"eks.amazonaws.com/role-arn\":\"arn:aws:iam::123456789012:role/aws-efs-csi-driver-2024052016144168910000003a\"},\"name\":\"efs-csi-controller-sa\"},\"tolerations\":[{\"effect\":\"NoSchedule\",\"key\":\"node.kubernetes.io/purpose\",\"operator\":\"Equal\",\"value\":\"management\"}]},\"node\":{\"serviceAccount\":{\"annotations\":{\"eks.amazonaws.com/role-arn\":\"arn:aws:iam::123456789012:role/aws-efs-csi-driver-2024052016144168910000003a\"},\"name\":\"efs-csi-node-sa\"}}}"
+    "version" = "3.0.3"
+  }
+  "aws_node_termination_handler" = {
+    "app_version" = "1.19.0"
+    "chart" = "aws-node-termination-handler"
+    "iam_policy" = "{\"Statement\":[{\"Action\":[\"ec2:DescribeInstances\",\"autoscaling:DescribeTags\",\"autoscaling:DescribeAutoScalingInstances\"],\"Effect\":\"Allow\",\"Resource\":\"*\"},{\"Action\":\"autoscaling:CompleteLifecycleAction\",\"Effect\":\"Allow\",\"Resource\":\"arn:aws:autoscaling:us-east-2:123456789012:autoScalingGroup:a356b079-b273-4b9b-b5e3-ecb5e1bde05e:autoScalingGroupName/nth_test-2024052016141481060000002b\"},{\"Action\":[\"sqs:ReceiveMessage\",\"sqs:DeleteMessage\"],\"Effect\":\"Allow\",\"Resource\":\"arn:aws:sqs:us-east-2:123456789012:aws-nth-test\"}],\"Version\":\"2012-10-17\"}"
+    "iam_policy_arn" = "arn:aws:iam::123456789012:policy/aws-node-termination-handler-20240520161440278400000038"
+    "iam_role_arn" = "arn:aws:iam::123456789012:role/aws-node-termination-handler-2024052016144264310000003b"
+    "iam_role_name" = "aws-node-termination-handler-2024052016144264310000003b"
+    "iam_role_path" = "/"
+    "iam_role_unique_id" = "AROA4DZC6W7A5D3CCDD4K"
+    "name" = "aws-node-termination-handler"
+    "namespace" = "aws-node-termination-handler"
+    "revision" = 1
+    "sqs" = {
+      "dead_letter_queue_arn" = null
+      "dead_letter_queue_id" = null
+      "dead_letter_queue_name" = null
+      "dead_letter_queue_url" = null
+      "queue_arn" = "arn:aws:sqs:us-east-2:123456789012:aws-nth-test"
+      "queue_id" = "https://sqs.us-east-2.amazonaws.com/123456789012/aws-nth-test"
+      "queue_name" = "aws-nth-test"
+      "queue_url" = "https://sqs.us-east-2.amazonaws.com/123456789012/aws-nth-test"
+    }
+    "values" = "{\"awsRegion\":\"us-east-2\",\"enableSqsTerminationDraining\":true,\"nodeSelector\":{\"kubernetes.io/os\":\"linux\",\"node.kubernetes.io/purpose\":\"management\"},\"queueURL\":\"https://sqs.us-east-2.amazonaws.com/123456789012/aws-nth-test\",\"serviceAccount\":{\"annotations\":{\"eks.amazonaws.com/role-arn\":\"arn:aws:iam::123456789012:role/aws-node-termination-handler-2024052016144264310000003b\"},\"name\":\"aws-node-termination-handler-sa\"},\"tolerations\":[{\"effect\":\"NoSchedule\",\"key\":\"node.kubernetes.io/purpose\",\"operator\":\"Equal\",\"value\":\"management\"}]}"
+    "version" = "0.21.0"
+  }
+  "cert_manager" = {
+    "app_version" = "v1.14.5"
+    "chart" = "cert-manager"
+    "iam_policy" = "{\"Statement\":[{\"Action\":\"route53:GetChange\",\"Effect\":\"Allow\",\"Resource\":\"arn:aws:route53:::change/*\"},{\"Action\":[\"route53:ListResourceRecordSets\",\"route53:ChangeResourceRecordSets\"],\"Effect\":\"Allow\",\"Resource\":\"arn:aws:route53:::hostedzone/*\"},{\"Action\":\"route53:ListHostedZonesByName\",\"Effect\":\"Allow\",\"Resource\":\"*\"}],\"Version\":\"2012-10-17\"}"
+    "iam_policy_arn" = "arn:aws:iam::123456789012:policy/cert-manager-20240520160302587300000007"
+    "iam_role_arn" = "arn:aws:iam::123456789012:role/cert-manager-2024052016144264370000003c"
+    "iam_role_name" = "cert-manager-2024052016144264370000003c"
+    "iam_role_path" = "/"
+    "iam_role_unique_id" = "AROA4DZC6W7A4H26KIHUE"
+    "name" = "cert-manager"
+    "namespace" = "cert-manager"
+    "revision" = 1
+    "values" = "{\"cainjector\":{\"nodeSelector\":{\"kubernetes.io/os\":\"linux\",\"node.kubernetes.io/purpose\":\"management\"},\"tolerations\":[{\"effect\":\"NoSchedule\",\"key\":\"node.kubernetes.io/purpose\",\"operator\":\"Equal\",\"value\":\"management\"}]},\"installCRDs\":true,\"serviceAccount\":{\"annotations\":{\"eks.amazonaws.com/role-arn\":\"arn:aws:iam::123456789012:role/cert-manager-2024052016144264370000003c\"},\"name\":\"cert-manager\"},\"startupapicheck\":{\"nodeSelector\":{\"kubernetes.io/os\":\"linux\",\"node.kubernetes.io/purpose\":\"management\"},\"tolerations\":[{\"effect\":\"NoSchedule\",\"key\":\"node.kubernetes.io/purpose\",\"operator\":\"Equal\",\"value\":\"management\"}]},\"webhook\":{\"nodeSelector\":{\"kubernetes.io/os\":\"linux\",\"node.kubernetes.io/purpose\":\"management\"},\"tolerations\":[{\"effect\":\"NoSchedule\",\"key\":\"node.kubernetes.io/purpose\",\"operator\":\"Equal\",\"value\":\"management\"}]}}"
+    "version" = "v1.14.5"
+  }
+  "cluster_autoscaler" = {
+    "app_version" = "1.30.0"
+    "chart" = "cluster-autoscaler"
+    "iam_policy" = "{\"Statement\":[{\"Action\":[\"eks:DescribeNodegroup\",\"ec2:GetInstanceTypesFromInstanceRequirements\",\"ec2:DescribeLaunchTemplateVersions\",\"ec2:DescribeInstanceTypes\",\"ec2:DescribeImages\",\"autoscaling:DescribeTags\",\"autoscaling:DescribeScalingActivities\",\"autoscaling:DescribeLaunchConfigurations\",\"autoscaling:DescribeAutoScalingInstances\",\"autoscaling:DescribeAutoScalingGroups\"],\"Effect\":\"Allow\",\"Resource\":\"*\"},{\"Action\":[\"autoscaling:UpdateAutoScalingGroup\",\"autoscaling:TerminateInstanceInAutoScalingGroup\",\"autoscaling:SetDesiredCapacity\"],\"Condition\":{\"StringEquals\":{\"autoscaling:ResourceTag/kubernetes.io/cluster/test\":\"owned\"}},\"Effect\":\"Allow\",\"Resource\":\"*\"}],\"Version\":\"2012-10-17\"}"
+    "iam_policy_arn" = "arn:aws:iam::123456789012:policy/cluster-autoscaler-20240520161405941100000024"
+    "iam_role_arn" = "arn:aws:iam::123456789012:role/cluster-autoscaler-20240520161441688600000039"
+    "iam_role_name" = "cluster-autoscaler-20240520161441688600000039"
+    "iam_role_path" = "/"
+    "iam_role_unique_id" = "AROA4DZC6W7A7HOPLRJ3J"
+    "name" = "cluster-autoscaler"
+    "namespace" = "kube-system"
+    "revision" = 1
+    "values" = "{\"autoDiscovery\":{\"clusterName\":\"test\"},\"awsRegion\":\"us-east-2\",\"image\":{\"tag\":\"v1.29.0\"},\"nodeSelector\":{\"kubernetes.io/os\":\"linux\",\"node.kubernetes.io/purpose\":\"management\"},\"rbac\":{\"serviceAccount\":{\"annotations\":{\"eks.amazonaws.com/role-arn\":\"arn:aws:iam::123456789012:role/cluster-autoscaler-20240520161441688600000039\"},\"name\":\"cluster-autoscaler-sa\"}},\"tolerations\":[{\"effect\":\"NoSchedule\",\"key\":\"node.kubernetes.io/purpose\",\"operator\":\"Equal\",\"value\":\"management\"}]}"
+    "version" = "9.37.0"
+  }
+  "eks_addons" = {
+    "aws-ebs-csi-driver" = {
+      "addon_name" = "aws-ebs-csi-driver"
+      "addon_version" = "v1.30.0-eksbuild.1"
+      "arn" = "arn:aws:eks:us-east-2:123456789012:addon/test/aws-ebs-csi-driver/60c7cb65-47a8-1d0a-b9c8-e977e03dfc1e"
+      "cluster_name" = "test"
+      "configuration_values" = ""
+      "created_at" = "2024-05-20T16:16:48Z"
+      "id" = "test:aws-ebs-csi-driver"
+      "modified_at" = "2024-05-20T16:18:01Z"
+      "preserve" = true
+      "resolve_conflicts" = tostring(null)
+      "resolve_conflicts_on_create" = "OVERWRITE"
+      "resolve_conflicts_on_update" = "OVERWRITE"
+      "service_account_role_arn" = "arn:aws:iam::123456789012:role/test-ebs-csi-driver-20240520161419789200000030"
+      "tags" = tomap({
+        "EKS" = "test"
+        "Environment" = "test"
+        "Terraform" = "true"
+      })
+      "tags_all" = tomap({
+        "EKS" = "test"
+        "Environment" = "test"
+        "Terraform" = "true"
+      })
+      "timeouts" = {
+        "create" = tostring(null)
+        "delete" = tostring(null)
+        "update" = tostring(null)
+      }
+    }
+    "coredns" = {
+      "addon_name" = "coredns"
+      "addon_version" = "v1.11.1-eksbuild.9"
+      "arn" = "arn:aws:eks:us-east-2:123456789012:addon/test/coredns/8cc7cb65-47ae-8ccc-3e56-76ba95dd01dd"
+      "cluster_name" = "test"
+      "configuration_values" = "{\"nodeSelector\":{\"kubernetes.io/os\":\"linux\",\"node.kubernetes.io/purpose\":\"management\"},\"tolerations\":[{\"effect\":\"NoSchedule\",\"key\":\"node.kubernetes.io/purpose\",\"operator\":\"Equal\",\"value\":\"management\"}]}"
+      "created_at" = "2024-05-20T16:16:48Z"
+      "id" = "test:coredns"
+      "modified_at" = "2024-05-20T16:17:26Z"
+      "preserve" = true
+      "resolve_conflicts" = tostring(null)
+      "resolve_conflicts_on_create" = "OVERWRITE"
+      "resolve_conflicts_on_update" = "OVERWRITE"
+      "service_account_role_arn" = ""
+      "tags" = tomap({
+        "EKS" = "test"
+        "Environment" = "test"
+        "Terraform" = "true"
+      })
+      "tags_all" = tomap({
+        "EKS" = "test"
+        "Environment" = "test"
+        "Terraform" = "true"
+      })
+      "timeouts" = {
+        "create" = tostring(null)
+        "delete" = tostring(null)
+        "update" = tostring(null)
+      }
+    }
+    "kube-proxy" = {
+      "addon_name" = "kube-proxy"
+      "addon_version" = "v1.29.3-eksbuild.2"
+      "arn" = "arn:aws:eks:us-east-2:123456789012:addon/test/kube-proxy/fac7cb65-47b2-e2d1-57ba-844acd364eeb"
+      "cluster_name" = "test"
+      "configuration_values" = ""
+      "created_at" = "2024-05-20T16:16:48Z"
+      "id" = "test:kube-proxy"
+      "modified_at" = "2024-05-20T16:17:21Z"
+      "preserve" = true
+      "resolve_conflicts" = tostring(null)
+      "resolve_conflicts_on_create" = "OVERWRITE"
+      "resolve_conflicts_on_update" = "OVERWRITE"
+      "service_account_role_arn" = ""
+      "tags" = tomap({
+        "EKS" = "test"
+        "Environment" = "test"
+        "Terraform" = "true"
+      })
+      "tags_all" = tomap({
+        "EKS" = "test"
+        "Environment" = "test"
+        "Terraform" = "true"
+      })
+      "timeouts" = {
+        "create" = tostring(null)
+        "delete" = tostring(null)
+        "update" = tostring(null)
+      }
+    }
+    "snapshot-controller" = {
+      "addon_name" = "snapshot-controller"
+      "addon_version" = "v7.0.1-eksbuild.1"
+      "arn" = "arn:aws:eks:us-east-2:123456789012:addon/test/snapshot-controller/5cc7cb65-47ab-b259-1c6e-8491117a9c21"
+      "cluster_name" = "test"
+      "configuration_values" = ""
+      "created_at" = "2024-05-20T16:16:48Z"
+      "id" = "test:snapshot-controller"
+      "modified_at" = "2024-05-20T16:18:00Z"
+      "preserve" = true
+      "resolve_conflicts" = tostring(null)
+      "resolve_conflicts_on_create" = "OVERWRITE"
+      "resolve_conflicts_on_update" = "OVERWRITE"
+      "service_account_role_arn" = ""
+      "tags" = tomap({
+        "EKS" = "test"
+        "Environment" = "test"
+        "Terraform" = "true"
+      })
+      "tags_all" = tomap({
+        "EKS" = "test"
+        "Environment" = "test"
+        "Terraform" = "true"
+      })
+      "timeouts" = {
+        "create" = tostring(null)
+        "delete" = tostring(null)
+        "update" = tostring(null)
+      }
+    }
+    "vpc-cni" = {
+      "addon_name" = "vpc-cni"
+      "addon_version" = "v1.18.1-eksbuild.3"
+      "arn" = "arn:aws:eks:us-east-2:123456789012:addon/test/vpc-cni/f8c7cb65-47b0-583b-59ab-aff88dec8b5c"
+      "cluster_name" = "test"
+      "configuration_values" = ""
+      "created_at" = "2024-05-20T16:16:48Z"
+      "id" = "test:vpc-cni"
+      "modified_at" = "2024-05-20T16:17:22Z"
+      "preserve" = true
+      "resolve_conflicts" = tostring(null)
+      "resolve_conflicts_on_create" = "OVERWRITE"
+      "resolve_conflicts_on_update" = "OVERWRITE"
+      "service_account_role_arn" = "arn:aws:iam::123456789012:role/test-vpc-cni-20240520161420541700000031"
+      "tags" = tomap({
+        "EKS" = "test"
+        "Environment" = "test"
+        "Terraform" = "true"
+      })
+      "tags_all" = tomap({
+        "EKS" = "test"
+        "Environment" = "test"
+        "Terraform" = "true"
+      })
+      "timeouts" = {
+        "create" = tostring(null)
+        "delete" = tostring(null)
+        "update" = tostring(null)
+      }
+    }
+  }
+  "metrics_server" = {
+    "app_version" = "0.7.1"
+    "chart" = "metrics-server"
+    "iam_policy" = null
+    "iam_policy_arn" = null
+    "iam_role_arn" = null
+    "iam_role_name" = null
+    "iam_role_path" = null
+    "iam_role_unique_id" = null
+    "name" = "metrics-server"
+    "namespace" = "kube-system"
+    "revision" = 1
+    "values" = "{\"nodeSelector\":{\"kubernetes.io/os\":\"linux\",\"node.kubernetes.io/purpose\":\"management\"},\"tolerations\":[{\"effect\":\"NoSchedule\",\"key\":\"node.kubernetes.io/purpose\",\"operator\":\"Equal\",\"value\":\"management\"}]}"
+    "version" = "3.12.1"
+  }
+  "vpa" = {
+    "app_version" = "1.0.0"
+    "chart" = "vpa"
+    "iam_policy" = null
+    "iam_policy_arn" = null
+    "iam_role_arn" = null
+    "iam_role_name" = null
+    "iam_role_path" = null
+    "iam_role_unique_id" = null
+    "name" = "vpa"
+    "namespace" = "vpa"
+    "revision" = 1
+    "values" = "{\"admissionController\":{\"enabled\":true,\"nodeSelector\":{\"kubernetes.io/os\":\"linux\",\"node.kubernetes.io/purpose\":\"management\"},\"tolerations\":[{\"effect\":\"NoSchedule\",\"key\":\"node.kubernetes.io/purpose\",\"operator\":\"Equal\",\"value\":\"management\"}]},\"mutatingWebhookConfiguration\":{\"nodeSelector\":{\"kubernetes.io/os\":\"linux\",\"node.kubernetes.io/purpose\":\"management\"},\"tolerations\":[{\"effect\":\"NoSchedule\",\"key\":\"node.kubernetes.io/purpose\",\"operator\":\"Equal\",\"value\":\"management\"}]},\"recommender\":{\"nodeSelector\":{\"kubernetes.io/os\":\"linux\",\"node.kubernetes.io/purpose\":\"management\"},\"tolerations\":[{\"effect\":\"NoSchedule\",\"key\":\"node.kubernetes.io/purpose\",\"operator\":\"Equal\",\"value\":\"management\"}]},\"updater\":{\"nodeSelector\":{\"kubernetes.io/os\":\"linux\",\"node.kubernetes.io/purpose\":\"management\"},\"tolerations\":[{\"effect\":\"NoSchedule\",\"key\":\"node.kubernetes.io/purpose\",\"operator\":\"Equal\",\"value\":\"management\"}]}}"
+    "version" = "4.4.6"
+  }
+  "apisix" = [
+    {
+      "apisix_admin_key" = "rSejzAmCuB6n5d29TQyWgI81qTNNk6cD"
+      "app_version" = "1.8.0"
+      "chart" = "apisix-ingress-controller"
+      "name" = "apisix-ingress-controller"
+      "namespace" = "ingress-apisix"
+      "revision" = 1
+      "version" = "0.14.0"
+    },
+  ]
+  "clickhouse_operator" = [
+    {
+      "app_version" = "0.23.5"
+      "chart" = "altinity-clickhouse-operator"
+      "name" = "altinity-clickhouse-operator"
+      "namespace" = "clickhouse"
+      "revision" = 1
+      "version" = "0.23.5"
+    },
+  ]
+  "eks" = {
+    "cloudwatch_log_group_arn" = "arn:aws:logs:us-east-2:123456789012:log-group:/aws/eks/test/cluster"
+    "cloudwatch_log_group_name" = "/aws/eks/test/cluster"
+    "cluster_addons" = {}
+    "cluster_arn" = "arn:aws:eks:us-east-2:123456789012:cluster/test"
+    "cluster_certificate_authority_data" = "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURCVENDQWUyZ0F3SUJBZ0lJYithUUNSOXRhQVF3RFFZSktvWklodmNOQVFFTEJRQXdGVEVUTUJFR0ExVUUKQXhNS2EzVmlaWEp1WlhSbGN6QWVGdzB5TkRBMU1qQXhOakF5TXpSYUZ3MHpOREExTVRneE5qQTNNelJhTUJVeApFekFSQmdOVkJBTVRDbXQxWW1WeWJtVjBaWE13Z2dFaU1BMEdDU3FHU0liM0RRRUJBUVVBQTRJQkR3QXdnZ0VLCkFvSUJBUURXa1c2b2EyK1RZc1phaGExSDNlQ0wrNHZuZXprNlMrVmZMclNOZVlYcDIzeTJSUERHVlFheUluazgKN2pPU2xveWdhSjh2MTJMcHE1R25RQ2N1bndtTk9xOTl6Wm9qU3JzekY1SlNXVmtORmFEV0EwOVluaWZKcjM1ZwpTOE1RUElpK3VpMWd1cHJ1VGFILzBPc3J6RmNKMHNZM2NZaXlWN1ZHUCtsS2pFSFZpL09OMm1kSzB6NnVlaEVUClJWM1JtL2xDWXpmMnM0cUVVMllvMm5pMWRrbkRoWXdUNkNvY21qeFNYdzQ0ekYwZjBySyt5dUFuV09uM0sxUkMKYXhSM1BnWWQ2NHdRcHhSeCsvQ3BmWEtQWEhEWHdGQ3hCVUJSSDVCRTNVN2g5enhlTytSVExvOTNEUDIxQk5NSQp5cDVLU3IxVTB6TUVIdUVqelRZQmVWSFJWcHFwQWdNQkFBR2pXVEJYTUE0R0ExVWREd0VCL3dRRUF3SUNwREFQCkJnTlZIUk1CQWY4RUJUQURBUUgvTUIwR0ExVWREZ1FXQkJTQ1NQWFE4SGFtZTlvRDBUb2tsM0NEWjIzTG9qQVYKQmdOVkhSRUVEakFNZ2dwcmRXSmxjbTVsZEdWek1BMEdDU3FHU0liM0RRRUJDd1VBQTRJQkFRQmkycm1QTmJGeApmRlFDN2NYYkpDU0lQN0grTmlYRi9HU1cyL21PQTlSRTUxSnllSVVWVWxDbFI3dE9SS0l3aU1TRmhHMVdzWWVaCm9aSWladisrbHRzdGxaOTFVOGhsbW9XMitoR2JYUWlaRFlzWTJGSk5TM2JBSS9EaWphd24wdzd5UnE4dzhUR2QKa3ErTFRHREJWd0x2VXBiUmVlbzhPQU9oSmx3Q0g2MFFPOGJ0d2syN1NOMjkrV0FSOERYOHluWUVFYXBSVGx3TQpLVWYvY1Y4NThlbUhmcmRhMFQ5bm9hTHo0TlJhMFh0KzAzZzhTV21ST3YrQ2kwdG5TY3dBMXVFS01xV2gxOUtiCndWTHBZOExmVUx6OUpSSGFSa1hqRlgrZkEyT2RrUWJXMGJydXZzazJTVVlCRmwreW9aYnR4RHlqSHorc0t1Y2gKUURrRDJGTzBuektBCi0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K"
+    "cluster_endpoint" = "https://CE821DD76FDD2188152425E898EF93F7.gr7.us-east-2.eks.amazonaws.com"
+    "cluster_iam_role_arn" = "arn:aws:iam::123456789012:role/test-cluster-20240520160302582100000006"
+    "cluster_iam_role_name" = "test-cluster-20240520160302582100000006"
+    "cluster_iam_role_unique_id" = "AROA4DZC6W7ASMAIRXSGM"
+    "cluster_id" = tostring(null)
+    "cluster_identity_providers" = {}
+    "cluster_name" = "test"
+    "cluster_oidc_issuer_url" = "https://oidc.eks.us-east-2.amazonaws.com/id/CE821DD76FDD2188152425E898EF93F7"
+    "cluster_platform_version" = "eks.7"
+    "cluster_primary_security_group_id" = "sg-0e379ea15cd57a8c0"
+    "cluster_security_group_arn" = "arn:aws:ec2:us-east-2:123456789012:security-group/sg-0466a68ff1242f915"
+    "cluster_security_group_id" = "sg-0466a68ff1242f915"
+    "cluster_status" = "ACTIVE"
+    "cluster_tls_certificate_sha1_fingerprint" = "9e99a48a9960b14926bb7f3b02e22da2b0ab7280"
+    "cluster_version" = "1.29"
+    "eks_managed_node_groups" = {
+      "management_us-east-2a" = {
+        "autoscaling_group_schedule_arns" = {}
+        "iam_role_arn" = "arn:aws:iam::123456789012:role/management_us-east-2a-eks-node-group-2024052016030376190000000b"
+        "iam_role_name" = "management_us-east-2a-eks-node-group-2024052016030376190000000b"
+        "iam_role_unique_id" = "AROA4DZC6W7A4A4B4INTA"
+        "launch_template_arn" = "arn:aws:ec2:us-east-2:123456789012:launch-template/lt-06b5d43e1a486928a"
+        "launch_template_id" = "lt-06b5d43e1a486928a"
+        "launch_template_latest_version" = 1
+        "launch_template_name" = "management_us-east-2a-20240520161410177500000027"
+        "node_group_arn" = "arn:aws:eks:us-east-2:123456789012:nodegroup/test/management_us-east-2a-2024052016141697260000002c/6cc7cb64-20f0-a9ba-fb29-efb4cf3fdd63"
+        "node_group_autoscaling_group_names" = [
+          "eks-management_us-east-2a-2024052016141697260000002c-6cc7cb64-20f0-a9ba-fb29-efb4cf3fdd63",
+        ]
+        "node_group_id" = "test:management_us-east-2a-2024052016141697260000002c"
+        "node_group_labels" = tomap({
+          "node.kubernetes.io/purpose" = "management"
+        })
+        "node_group_resources" = tolist([
+          {
+            "autoscaling_groups" = tolist([
+              {
+                "name" = "eks-management_us-east-2a-2024052016141697260000002c-6cc7cb64-20f0-a9ba-fb29-efb4cf3fdd63"
+              },
+            ])
+            "remote_access_security_group_id" = ""
+          },
+        ])
+        "node_group_status" = "ACTIVE"
+        "node_group_taints" = toset([])
+        "platform" = "linux"
+      }
+      "management_us-east-2b" = {
+        "autoscaling_group_schedule_arns" = {}
+        "iam_role_arn" = "arn:aws:iam::123456789012:role/management_us-east-2b-eks-node-group-2024052016030376800000000c"
+        "iam_role_name" = "management_us-east-2b-eks-node-group-2024052016030376800000000c"
+        "iam_role_unique_id" = "AROA4DZC6W7A5FQLB4GHA"
+        "launch_template_arn" = "arn:aws:ec2:us-east-2:123456789012:launch-template/lt-0b2b8a3b1cfd98ad7"
+        "launch_template_id" = "lt-0b2b8a3b1cfd98ad7"
+        "launch_template_latest_version" = 1
+        "launch_template_name" = "management_us-east-2b-20240520161410776900000029"
+        "node_group_arn" = "arn:aws:eks:us-east-2:123456789012:nodegroup/test/management_us-east-2b-2024052016141905730000002e/c6c7cb64-2441-c3f8-dff3-9d9ec82336ae"
+        "node_group_autoscaling_group_names" = [
+          "eks-management_us-east-2b-2024052016141905730000002e-c6c7cb64-2441-c3f8-dff3-9d9ec82336ae",
+        ]
+        "node_group_id" = "test:management_us-east-2b-2024052016141905730000002e"
+        "node_group_labels" = tomap({
+          "node.kubernetes.io/purpose" = "management"
+        })
+        "node_group_resources" = tolist([
+          {
+            "autoscaling_groups" = tolist([
+              {
+                "name" = "eks-management_us-east-2b-2024052016141905730000002e-c6c7cb64-2441-c3f8-dff3-9d9ec82336ae"
+              },
+            ])
+            "remote_access_security_group_id" = ""
+          },
+        ])
+        "node_group_status" = "ACTIVE"
+        "node_group_taints" = toset([])
+        "platform" = "linux"
+      }
+    }
+    "eks_managed_node_groups_autoscaling_group_names" = tolist([
+      "eks-management_us-east-2a-2024052016141697260000002c-6cc7cb64-20f0-a9ba-fb29-efb4cf3fdd63",
+      "eks-management_us-east-2b-2024052016141905730000002e-c6c7cb64-2441-c3f8-dff3-9d9ec82336ae",
+    ])
+    "fargate_profiles" = {}
+    "kms_key_arn" = "arn:aws:kms:us-east-2:123456789012:key/5e96c7f9-2d02-4a6b-a727-dc7f3c5b2bb3"
+    "kms_key_id" = "5e96c7f9-2d02-4a6b-a727-dc7f3c5b2bb3"
+    "kms_key_policy" = "{\"Statement\":[{\"Action\":[\"kms:Update*\",\"kms:UntagResource\",\"kms:TagResource\",\"kms:ScheduleKeyDeletion\",\"kms:Revoke*\",\"kms:ReplicateKey\",\"kms:Put*\",\"kms:List*\",\"kms:ImportKeyMaterial\",\"kms:Get*\",\"kms:Enable*\",\"kms:Disable*\",\"kms:Describe*\",\"kms:Delete*\",\"kms:Create*\",\"kms:CancelKeyDeletion\"],\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"arn:aws:iam::123456789012:user/frizzy\"},\"Resource\":\"*\",\"Sid\":\"KeyAdministration\"},{\"Action\":[\"kms:ReEncrypt*\",\"kms:GenerateDataKey*\",\"kms:Encrypt\",\"kms:DescribeKey\",\"kms:Decrypt\"],\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"arn:aws:iam::123456789012:role/test-cluster-20240520160302582100000006\"},\"Resource\":\"*\",\"Sid\":\"KeyUsage\"}],\"Version\":\"2012-10-17\"}"
+    "kubeconfig" = "/home/frizzy/.kube/eks-123456789012-us-east-2-test"
+    "node_security_group_arn" = "arn:aws:ec2:us-east-2:123456789012:security-group/sg-0f017866d3d3cc58d"
+    "node_security_group_id" = "sg-0f017866d3d3cc58d"
+    "oidc_provider" = "oidc.eks.us-east-2.amazonaws.com/id/CE821DD76FDD2188152425E898EF93F7"
+    "oidc_provider_arn" = "arn:aws:iam::123456789012:oidc-provider/oidc.eks.us-east-2.amazonaws.com/id/CE821DD76FDD2188152425E898EF93F7"
+    "region" = "us-east-2"
+    "self_managed_node_groups" = {
+      "nth_test" = {
+        "autoscaling_group_arn" = "arn:aws:autoscaling:us-east-2:123456789012:autoScalingGroup:a356b079-b273-4b9b-b5e3-ecb5e1bde05e:autoScalingGroupName/nth_test-2024052016141481060000002b"
+        "autoscaling_group_availability_zones" = toset([
+          "us-east-2a",
+          "us-east-2b",
+          "us-east-2c",
+        ])
+        "autoscaling_group_default_cooldown" = 300
+        "autoscaling_group_desired_capacity" = 0
+        "autoscaling_group_health_check_grace_period" = 300
+        "autoscaling_group_health_check_type" = "EC2"
+        "autoscaling_group_id" = "nth_test-2024052016141481060000002b"
+        "autoscaling_group_max_size" = 1
+        "autoscaling_group_min_size" = 0
+        "autoscaling_group_name" = "nth_test-2024052016141481060000002b"
+        "autoscaling_group_schedule_arns" = {}
+        "autoscaling_group_vpc_zone_identifier" = toset([
+          "subnet-00f486dcca1d11278",
+          "subnet-043902e59395c7549",
+          "subnet-0e12330869def1d20",
+        ])
+        "iam_instance_profile_arn" = "arn:aws:iam::123456789012:instance-profile/nth_test-node-group-2024052016030582350000001a"
+        "iam_instance_profile_id" = "nth_test-node-group-2024052016030582350000001a"
+        "iam_instance_profile_unique" = "AIPA4DZC6W7AZHUH3L3HI"
+        "iam_role_arn" = "arn:aws:iam::123456789012:role/nth_test-node-group-2024052016030376980000000d"
+        "iam_role_name" = "nth_test-node-group-2024052016030376980000000d"
+        "iam_role_unique_id" = "AROA4DZC6W7A6QJH7JF36"
+        "image_id" = "ami-07bf4230c9e443622"
+        "launch_template_arn" = "arn:aws:ec2:us-east-2:123456789012:launch-template/lt-07c2b566ffd82fb40"
+        "launch_template_id" = "lt-07c2b566ffd82fb40"
+        "launch_template_latest_version" = 1
+        "launch_template_name" = "nth_test-20240520161408797800000025"
+        "platform" = "linux"
+        "user_data" = "IyEvYmluL2Jhc2gKc2V0IC1lCkI2NF9DTFVTVEVSX0NBPUxTMHRMUzFDUlVkSlRpQkRSVkpVU1VaSlEwRlVSUzB0TFMwdENrMUpTVVJDVkVORFFXVXlaMEYzU1VKQlowbEpZaXRoVVVOU09YUmhRVkYzUkZGWlNrdHZXa2xvZG1OT1FWRkZURUpSUVhkR1ZFVlVUVUpGUjBFeFZVVUtRWGhOUzJFelZtbGFXRXAxV2xoU2JHTjZRV1ZHZHpCNVRrUkJNVTFxUVhoT2FrRjVUWHBTWVVaM01IcE9SRUV4VFZSbmVFNXFRVE5OZWxKaFRVSlZlQXBGZWtGU1FtZE9Wa0pCVFZSRGJYUXhXVzFXZVdKdFZqQmFXRTEzWjJkRmFVMUJNRWREVTNGSFUwbGlNMFJSUlVKQlVWVkJRVFJKUWtSM1FYZG5aMFZMQ2tGdlNVSkJVVVJYYTFjMmIyRXlLMVJaYzFwaGFHRXhTRE5sUTB3ck5IWnVaWHByTmxNclZtWk1jbE5PWlZsWWNESXplVEpTVUVSSFZsRmhlVWx1YXpnS04ycFBVMnh2ZVdkaFNqaDJNVEpNY0hFMVIyNVJRMk4xYm5kdFRrOXhPVGw2V205cVUzSnpla1kxU2xOWFZtdE9SbUZFVjBFd09WbHVhV1pLY2pNMVp3cFRPRTFSVUVscEszVnBNV2QxY0hKMVZHRklMekJQYzNKNlJtTktNSE5aTTJOWmFYbFdOMVpIVUN0c1MycEZTRlpwTDA5T01tMWtTekI2Tm5WbGFFVlVDbEpXTTFKdEwyeERXWHBtTW5NMGNVVlZNbGx2TW01cE1XUnJia1JvV1hkVU5rTnZZMjFxZUZOWWR6UTBla1l3WmpCeVN5dDVkVUZ1VjA5dU0wc3hVa01LWVhoU00xQm5XV1EyTkhkUmNIaFNlQ3N2UTNCbVdFdFFXRWhFV0hkR1EzaENWVUpTU0RWQ1JUTlZOMmc1ZW5obFR5dFNWRXh2T1RORVVESXhRazVOU1FwNWNEVkxVM0l4VlRCNlRVVklkVVZxZWxSWlFtVldTRkpXY0hGd1FXZE5Ra0ZCUjJwWFZFSllUVUUwUjBFeFZXUkVkMFZDTDNkUlJVRjNTVU53UkVGUUNrSm5UbFpJVWsxQ1FXWTRSVUpVUVVSQlVVZ3ZUVUl3UjBFeFZXUkVaMUZYUWtKVFExTlFXRkU0U0dGdFpUbHZSREJVYjJ0c00wTkVXakl6VEc5cVFWWUtRbWRPVmtoU1JVVkVha0ZOWjJkd2NtUlhTbXhqYlRWc1pFZFdlazFCTUVkRFUzRkhVMGxpTTBSUlJVSkRkMVZCUVRSSlFrRlJRbWt5Y20xUVRtSkdlQXBtUmxGRE4yTllZa3BEVTBsUU4wZ3JUbWxZUmk5SFUxY3lMMjFQUVRsU1JUVXhTbmxsU1ZWV1ZXeERiRkkzZEU5U1MwbDNhVTFUUm1oSE1WZHpXV1ZhQ205YVNXbGFkaXNyYkhSemRHeGFPVEZWT0doc2JXOVhNaXRvUjJKWVVXbGFSRmx6V1RKR1NrNVRNMkpCU1M5RWFXcGhkMjR3ZHpkNVVuRTRkemhVUjJRS2EzRXJURlJIUkVKV2QweDJWWEJpVW1WbGJ6aFBRVTlvU214M1EwZzJNRkZQT0dKMGQyc3lOMU5PTWprclYwRlNPRVJZT0hsdVdVVkZZWEJTVkd4M1RRcExWV1l2WTFZNE5UaGxiVWhtY21SaE1GUTVibTloVEhvMFRsSmhNRmgwS3pBelp6aFRWMjFTVDNZclEya3dkRzVUWTNkQk1YVkZTMDF4VjJneE9VdGlDbmRXVEhCWk9FeG1WVXg2T1VwU1NHRlNhMWhxUmxnclprRXlUMlJyVVdKWE1HSnlkWFp6YXpKVFZWbENSbXdyZVc5YVluUjRSSGxxU0hvcmMwdDFZMmdLVVVSclJESkdUekJ1ZWt0QkNpMHRMUzB0UlU1RUlFTkZVbFJKUmtsRFFWUkZMUzB0TFMwSwpBUElfU0VSVkVSX1VSTD1odHRwczovL0NFODIxREQ3NkZERDIxODgxNTI0MjVFODk4RUY5M0Y3LmdyNy51cy1lYXN0LTIuZWtzLmFtYXpvbmF3cy5jb20KL2V0Yy9la3MvYm9vdHN0cmFwLnNoIHRlc3QgIC0tYjY0LWNsdXN0ZXItY2EgJEI2NF9DTFVTVEVSX0NBIC0tYXBpc2VydmVyLWVuZHBvaW50ICRBUElfU0VSVkVSX1VSTAo="
+      }
+    }
+    "self_managed_node_groups_autoscaling_group_names" = tolist([
+      "nth_test-2024052016141481060000002b",
+    ])
+    "vpc_id" = "vpc-0f033881398d4f972"
+  }
+  "grafana" = [
+    {
+      "admin_password" = "ao8YDK1ldV2z7aDCMeAc1c0Fi8Pz3GyP"
+      "admin_user" = "test@test.com"
+      "app_version" = "10.4.1"
+      "chart" = "grafana"
+      "grafana_operator_integration" = true
+      "name" = "grafana"
+      "namespace" = "monitoring"
+      "revision" = 1
+      "version" = "7.3.11"
+    },
+  ]
+  "grafana_operator" = [
+    {
+      "app_version" = "5.9.0"
+      "chart" = "grafana-operator"
+      "name" = "grafana-operator"
+      "namespace" = "monitoring"
+      "revision" = 1
+      "version" = "4.2.4"
+    },
+  ]
+  "kubernetes_dashboard" = [
+    {
+      "app_version" = ""
+      "chart" = "kubernetes-dashboard"
+      "name" = "kubernetes-dashboard"
+      "namespace" = "kubernetes-dashboard"
+      "revision" = 1
+      "version" = "7.4.0"
+    },
+  ]
+  "nginx" = [
+    {
+      "app_version" = "1.10.1"
+      "chart" = "ingress-nginx"
+      "name" = "ingress-nginx"
+      "namespace" = "ingress-nginx"
+      "revision" = 1
+      "version" = "4.10.1"
+    },
+  ]
+  "openobserve" = [
+    {
+      "app_version" = "v0.10.5"
+      "chart" = "openobserve-standalone"
+      "iam_policy" = null
+      "iam_policy_arn" = null
+      "iam_role_arn" = "arn:aws:iam::123456789012:role/openobserve-20240520164111951500000001"
+      "iam_role_name" = "openobserve-20240520164111951500000001"
+      "iam_role_path" = "openobserve-20240520164111951500000001"
+      "iam_role_unique_id" = "AROA4DZC6W7A4S3JFSWFO"
+      "name" = "openobserve-standalone"
+      "namespace" = "openobserve"
+      "revision" = 1
+      "version" = "0.10.5"
+      "zo_root_user_password" = "tDFIgHO6ZpKS8cqkJmuW0oKD6mdkChjZ"
+    },
+  ]
+  "openobserve_collector" = [
+    {
+      "app_version" = "0.99.0"
+      "chart" = "openobserve-collector"
+      "iam_policy" = null
+      "iam_policy_arn" = null
+      "iam_role_arn" = null
+      "iam_role_name" = null
+      "iam_role_path" = null
+      "iam_role_unique_id" = null
+      "name" = "openobserve-collector"
+      "namespace" = "openobserve-collector"
+      "revision" = 1
+      "version" = "0.3.6"
+    },
+  ]
+  "opentelemetry_operator" = [
+    {
+      "app_version" = "0.99.0"
+      "chart" = "opentelemetry-operator"
+      "name" = "opentelemetry-operator"
+      "namespace" = "monitoring"
+      "revision" = 1
+      "version" = "0.58.2"
+    },
+  ]
+  "qryn" = [
+    {
+      "app_version" = {
+        "clickhouse" = "24.4.1"
+        "qryn" = "3.1.5"
+      }
+      "chart" = {
+        "clickhouse" = "clickhouse"
+        "qryn" = "qryn-helm"
+      }
+      "clickhouse_password" = "6SIZYATNGCxwRoxdZg97GIh81Iuv3icZ"
+      "iam_policy" = null
+      "iam_policy_arn" = null
+      "iam_role_arn" = "arn:aws:iam::123456789012:role/qryn-20240520160302565800000003-20240520161422111400000033"
+      "iam_role_name" = "qryn-20240520160302565800000003-20240520161422111400000033"
+      "iam_role_path" = "qryn-20240520160302565800000003-20240520161422111400000033"
+      "iam_role_unique_id" = "AROA4DZC6W7A6L7EPK4MS"
+      "name" = {
+        "clickhouse" = "qryn-clickhouse"
+        "qryn" = "qryn-helm"
+      }
+      "namespace" = {
+        "clickhouse" = "monitoring"
+        "qryn" = "monitoring"
+      }
+      "revision" = {
+        "clickhouse" = 1
+        "qryn" = 1
+      }
+      "root_password" = "Ip0n9YD07EoRS3HytjyuZyJXdxU0t0aZ"
+      "version" = {
+        "clickhouse" = "6.0.7"
+        "qryn" = "0.1.1"
+      }
+    },
+  ]
+  "uptrace" = [
+    {
+      "app_version" = {
+        "clickhouse" = "24.4.1"
+        "postgresql" = "16.3.0"
+        "uptrace" = "1.7.4"
+      }
+      "chart" = {
+        "clickhouse" = "clickhouse"
+        "postgresql" = "postgresql"
+        "uptrace" = "uptrace"
+      }
+      "clickhouse_password" = "XHsYLoifd5pZHImVeeeZ8CgvVi3DogzW"
+      "iam_policy" = null
+      "iam_policy_arn" = null
+      "iam_role_arn" = "arn:aws:iam::123456789012:role/uptrace-20240520160302563900000002-20240520161421358600000032"
+      "iam_role_name" = "uptrace-20240520160302563900000002-20240520161421358600000032"
+      "iam_role_path" = "uptrace-20240520160302563900000002-20240520161421358600000032"
+      "iam_role_unique_id" = "AROA4DZC6W7A3V3WKKIYK"
+      "name" = {
+        "clickhouse" = "uptrace-clickhouse"
+        "postgresql" = "uptrace-postgresql"
+        "uptrace" = "uptrace"
+      }
+      "namespace" = {
+        "clickhouse" = "monitoring"
+        "postgresql" = "monitoring"
+        "uptrace" = "monitoring"
+      }
+      "postgresql_password" = "PPVKo4lY7UsraWA3WRmykMc9w07YFkaG"
+      "project_tokens" = [
+        "eBqJznvxBba0bCwSDxpJT2AiV95udiYP",
+        "NaPYlDdKY4ZiuLfJ8MjcFXQxnXxy43pm",
+      ]
+      "revision" = {
+        "clickhouse" = 1
+        "uptrace" = 2
+      }
+      "root_password" = "TNAljZLhrhVnDNNMhgUxYCmcuaYV7PkT"
+      "version" = {
+        "clickhouse" = "6.0.7"
+        "postgresql" = "15.3.3"
+        "uptrace" = "1.7.4"
+      }
+    },
+  ]
+  "vector_agent" = [
+    {
+      "app_version" = "0.38.0-distroless-libc"
+      "chart" = "vector"
+      "name" = "vector"
+      "namespace" = "monitoring"
+      "revision" = 1
+      "version" = "0.33.0"
+    },
+  ]
+  "victoriametrics" = [
+    {
+      "app_version" = {
+        "auth" = "v1.101.0"
+        "stack" = "v1.101.0"
+      }
+      "auth_alertmanager_password" = "oWiVL7sOcYAHin8oSmSfT1dlwHUeYLrv"
+      "auth_alertmanager_user" = "alertmanager"
+      "auth_vmagent_rw_password" = "3T5KoIMlWhZbEy6QEDQRbfSwaEhg9L9H"
+      "auth_vmagent_rw_user" = "agent"
+      "auth_vmalert_password" = "3KSTquSEjHaHtpOGDhEJZCXXyR2AzvFD"
+      "auth_vmalert_user" = "vmalert"
+      "auth_vmselect_password" = "Z40As082mCsgxhePZJgDgdysbpIlqC9Y"
+      "auth_vmselect_user" = "vmselect"
+      "auth_vmsingle_password" = "Z40As082mCsgxhePZJgDgdysbpIlqC9Y"
+      "auth_vmsingle_user" = "vmsingle"
+      "chart" = {
+        "auth" = "victoria-metrics-auth"
+        "stack" = "victoria-metrics-k8s-stack"
+      }
+      "grafana_admin_password" = "OXjkdYFsRcFxkH2wZBFV4gCOVcd8pmdZ"
+      "grafana_admin_user" = "test@test.com"
+      "name" = {
+        "auth" = "victoria-metrics-auth"
+        "stack" = "victoria-metrics-k8s-stack"
+      }
+      "namespace" = {
+        "auth" = "monitoring"
+        "stack" = "monitoring"
+      }
+      "revision" = {
+        "auth" = 1
+        "stack" = 1
+      }
+      "version" = {
+        "auth" = "0.4.12"
+        "stack" = "0.22.1"
+      }
+    },
+  ]
+  "victoriametrics_operator" = [
+    {
+      "app_version" = {
+        "prometheus_operator_crds" = "v0.73.0"
+        "victoriametrics" = "0.44.0"
+      }
+      "chart" = {
+        "prometheus_operator_crds" = "prometheus-operator-crds"
+        "victoriametrics" = "victoria-metrics-operator"
+      }
+      "name" = {
+        "prometheus_operator_crds" = "prometheus-operator-crds"
+        "victoriametrics" = "victoria-metrics-operator"
+      }
+      "namespace" = {
+        "prometheus_operator_crds" = "monitoring"
+        "victoriametrics" = "monitoring"
+      }
+      "revision" = {
+        "prometheus_operator_crds" = 1
+        "victoriametrics" = 1
+      }
+      "version" = {
+        "prometheus_operator_crds" = "11.0.0"
+        "victoriametrics" = "0.31.2"
+      }
+    },
+  ]
+}

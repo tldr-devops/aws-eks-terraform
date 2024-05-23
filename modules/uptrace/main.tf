@@ -136,6 +136,9 @@ locals {
 
           # Secret key that is used to sign JWT tokens etc.
           secret_key: "${random_password.uptrace_secret_key.result}"
+
+          uptrace_go:
+            dsn: "http://${random_password.uptrace_project_tokens[0].result}@127.0.0.1:14317/1"
     EOT
   ]
   set = []

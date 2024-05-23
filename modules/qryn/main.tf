@@ -8,7 +8,7 @@ locals {
   values = [
     <<-EOT
       livenessProbe:
-        enabled: true
+        enabled: false # failed with 401
         endpoint: "/metrics"
       serviceMonitor:
         enabled: true

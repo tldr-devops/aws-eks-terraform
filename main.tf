@@ -1194,9 +1194,9 @@ module "vector_agent" {
               - kubernetes_logs
             encoding:
               codec: "json"
+            compression: "gzip"
             framing:
               method: "newline_delimited"
-            compression: "gzip"
             request:
               headers:
                 uptrace-dsn: "http://${module.uptrace[0].project_tokens[1]}@${module.uptrace[0].chart.uptrace}.${module.uptrace[0].namespace.uptrace}.svc:14318/2?grpc=14317"
@@ -1209,6 +1209,14 @@ module "vector_agent" {
               - kubernetes_logs
             encoding:
               codec: "json"
+            compression: "gzip"
+            labels:
+              forwarder: "vector"
+              # exported_namespace: "{{ kubernetes.namespace }}"
+              # exported_app: "{{ kubernetes.labels.app }}"
+              # exported_pod: "{{ kubernetes.pod.name }}"
+              # exported_node: "{{ kubernetes.node.name }}"
+              # exported_container: "{{ kubernetes.container.name }}"
             endpoint: "http://${module.qryn[0].chart.qryn}.${module.qryn[0].namespace.qryn}.svc:3100"
             auth:
               strategy: "basic"
