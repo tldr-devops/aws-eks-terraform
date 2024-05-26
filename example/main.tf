@@ -22,6 +22,8 @@ locals {
 
   # Limit number of availability zones in generating from templates.
   # Could be from 0 and up to ${number_of_multi_az}
+  # In given example 2 AZ would be used for each node group for fault tolerance.
+  # The price for that would be to pay for multi AZ traffic
   self_managed_node_group_number_of_multi_az = 2
   eks_managed_node_group_number_of_multi_az = 2
   fargate_profile_number_of_multi_az = 2
@@ -36,7 +38,7 @@ locals {
       desired_size = 1
       max_size     = 3
 
-      instance_types = ["m6a.large"] # 2cpu 8gb ram 62$\mo https://instances.vantage.sh/aws/ec2/m6a.large
+      instance_types = ["m6a.large"] # 2cpu 8gb ram 63$\mo https://instances.vantage.sh/aws/ec2/m6a.large
 
       labels = {
         "node.kubernetes.io/purpose" = "management"
@@ -150,8 +152,8 @@ module "eks" {
   enable_ingress_apisix               = true
   enable_ingress_nginx                = false
   enable_victoriametrics_operator     = true
-  enable_opentelemetry_operator       = true
-  enable_clickhouse_operator          = true
+  enable_opentelemetry_operator       = false
+  enable_clickhouse_operator          = false
   enable_grafana_operator             = true
   enable_victoriametrics              = true
   enable_grafana                      = true

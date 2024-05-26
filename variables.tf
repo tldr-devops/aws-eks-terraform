@@ -431,7 +431,7 @@ variable "victoriametrics_operator_values" {
 variable "enable_opentelemetry_operator" {
   description = "Install Opentelemetry Operator"
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "opentelemetry_operator_chart_version" {
@@ -463,7 +463,7 @@ variable "opentelemetry_operator_values" {
 variable "enable_clickhouse_operator" {
   description = "Install Clickhouse Operator"
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "clickhouse_operator_chart_version" {
@@ -893,7 +893,7 @@ variable "vector_agent_values" {
 variable "enable_kubernetes_dashboard" {
   description = "Install Kubernetes Dashboard"
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "kubernetes_dashboard_chart_version" {

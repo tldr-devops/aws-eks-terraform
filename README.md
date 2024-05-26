@@ -3,7 +3,52 @@
 [![#StandWithBelarus](https://img.shields.io/badge/Belarus-red?label=%23%20Stand%20With&labelColor=white&color=red)
 <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Presidential_Standard_of_Belarus_%28fictional%29.svg/240px-Presidential_Standard_of_Belarus_%28fictional%29.svg.png" width="20" height="20" alt="Voices From Belarus" />](https://bysol.org/en/) [![Stand With Ukraine](https://raw.githubusercontent.com/vshymanskyy/StandWithUkraine/main/badges/StandWithUkraine.svg)](https://vshymanskyy.github.io/StandWithUkraine)
 
-Setup basic EKS cluster with necessary controllers. Examples for further configuring the EKS cluster can be found in [eks blueprints](https://github.com/aws-ia/terraform-aws-eks-blueprints/tree/main), [tEKS](https://github.com/particuleio/teks) and [eks demo](https://github.com/awslabs/eksdemo) repos.
+Setup EKS cluster with necessary controllers, operators and monitoring stack. Similar projects:
+- [eks blueprints](https://github.com/aws-ia/terraform-aws-eks-blueprints/tree/main)
+- [tEKS](https://github.com/particuleio/teks)
+- [eks demo](https://github.com/awslabs/eksdemo)
+
+## What is included
+
+|| Description | Purpose | Enabled | DNS ||
+|EKS cluster module based on [terraform-aws-modules/eks/aws](https://github.com/terraform-aws-modules/terraform-aws-eks) v19|Base|True||
+|Templates for Managed Node Groups and Fargate Profile to link them to each availability zone instead of all zones at once|Base|True||
+|Integration of modules with each other and reasonable default values|Base|True||
+|[CoreDNS EKS addon](https://docs.aws.amazon.com/eks/latest/userguide/managing-coredns.html)|Core|True||
+|[Kube-Proxy EKS addon](https://docs.aws.amazon.com/eks/latest/userguide/managing-kube-proxy.html)|Core|True||
+|[VPC CNI EKS addon](https://docs.aws.amazon.com/eks/latest/userguide/managing-vpc-cni.html)|Core|True||
+|[AWS EBS CSI driver EKS addon](https://docs.aws.amazon.com/eks/latest/userguide/managing-ebs-csi.html)|Core|True||
+|[Snapshot Controller EKS addon](https://docs.aws.amazon.com/eks/latest/userguide/csi-snapshot-controller.html)|Core|True||
+|[AWS EFS CSI driver](https://github.com/aws-ia/terraform-aws-eks-blueprints-addons/blob/main/docs/addons/aws-efs-csi-driver.md)|Core|True||
+|[AWS Node Termination Handler](https://github.com/aws-ia/terraform-aws-eks-blueprints-addons/blob/main/docs/addons/aws-node-termination-handler.md)|Core|True||
+|[Cert Manager](https://github.com/aws-ia/terraform-aws-eks-blueprints-addons/blob/main/docs/addons/cert-manager.md)|Core|True||
+|[Cluster Autoscaler](https://github.com/aws-ia/terraform-aws-eks-blueprints-addons/blob/main/docs/addons/cluster-autoscaler.md)|Core|True||
+|[Metrics Server](https://github.com/aws-ia/terraform-aws-eks-blueprints-addons/blob/main/docs/addons/metrics-server.md)|Core|True||
+|[Vertical Pod Autoscaler](https://github.com/aws-ia/terraform-aws-eks-blueprints-addons/blob/main/docs/addons/vertical-pod-autoscaler.md)|Core|True||
+|[Ingress Apisix](https://github.com/apache/apisix-ingress-controller)|Ingress|True||
+|[Ingress Nginx](https://github.com/kubernetes/ingress-nginx)|Ingress|False||
+|[Victoriametrics Operator](https://github.com/VictoriaMetrics/operator)|Operator|True||
+|[Opentelemetry Operator](https://github.com/open-telemetry/opentelemetry-operator)|Operator|False||
+|[Clickhouse Operator](https://github.com/Altinity/clickhouse-operator)|Operator|False||
+|[Grafana Operator](https://artifacthub.io/packages/helm/bitnami/grafana-operator)|Operator|True||
+|[Victoriametrics](https://github.com/VictoriaMetrics/helm-charts/blob/master/charts/victoria-metrics-k8s-stack/README.md)|Monitoring|True|vmauth.${var.ingress_domain}<br>victoriametrics.${var.ingress_domain}<br>vmalertmanager.${var.ingress_domain}<br>vmagent.${var.ingress_domain}<br>vmalert.${var.ingress_domain}|
+|[Grafana](https://grafana.com/oss/grafana/)|Monitoring|True|grafana.${var.ingress_domain}|
+|[Uptrace](https://uptrace.dev/)|Monitoring|True|uptrace.${var.ingress_domain}|
+|[Vector](https://vector.dev/)|Monitoring|True||
+|[Qryn](https://qryn.metrico.in)|Monitoring|False|qryn.${var.ingress_domain}|
+|[Openobserve](https://openobserve.ai/)|Monitoring|False|openobserve.${var.ingress_domain}|
+|[Kubernetes Dashboard](https://github.com/kubernetes/dashboard)|Control|False|k8s-dashboard.${var.ingress_domain}|
+
+## What is not included right now
+
+- email integration
+- dns integration
+- alert rules
+- resources limits
+- ci & cd integration
+- network policies
+- host-based pod segregation
+- ...
 
 ## Depend on
 - terraform
@@ -45,21 +90,11 @@ After `terraform destroy` check ec2 volumes for unused disks as aws-ebs-csi-driv
 
 Helm upgrade `reset_values` flag set to `true` for everything except databases like postgresql and clickhouse, see this [explain](https://shipmight.com/blog/understanding-helm-upgrade-reset-reuse-values)
 
-## Variables
-
 ## Outputs
 
-| Name | Description |
-|------|-------------|
-|region|The AWS region|
-|vpc_id|The ID of the target VPC|
-|cluster_name|The name of the EKS|
-|cluster_endpoint|Endpoint for your Kubernetes API server|
-|cluster_certificate_authority_data|Base64 encoded certificate data required to communicate with the cluster|
+Check the [./example/outputs.example](./example/outputs.example) file to get an example of the output. For setting DNS you can describe ingress external address with kubectl: `kubectl get service/apisix-ingress-controller-apisix-gateway -n ingress-apisix`.
 
-Also `~/.kube/eks-${account_id}-${region}-${cluster_name}` will be created by `aws eks` utility.
-
-You can describe apisix ingress external address with kubectl: `kubectl get service/apisix-ingress-controller-apisix-gateway -n ingress-apisix`.
+Also `~/.kube/eks-${account_id}-${region}-${cluster_name}` kubeconfig will be created by `aws eks` utility.
 
 ## About the Author
 
