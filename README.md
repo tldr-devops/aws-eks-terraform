@@ -10,7 +10,8 @@ Setup EKS cluster with necessary controllers, operators and monitoring stack. Si
 
 ## What is included
 
-|| Description | Purpose | Enabled | DNS ||
+| Description | Purpose | Enabled | DNS |
+| --- | --- | --- | --- |
 |EKS cluster module based on [terraform-aws-modules/eks/aws](https://github.com/terraform-aws-modules/terraform-aws-eks) v19|Base|True||
 |Templates for Managed Node Groups and Fargate Profile to link them to each availability zone instead of all zones at once|Base|True||
 |Integration of modules with each other and reasonable default values|Base|True||
