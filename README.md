@@ -3,31 +3,42 @@
 [![#StandWithBelarus](https://img.shields.io/badge/Belarus-red?label=%23%20Stand%20With&labelColor=white&color=red)
 <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Presidential_Standard_of_Belarus_%28fictional%29.svg/240px-Presidential_Standard_of_Belarus_%28fictional%29.svg.png" width="20" height="20" alt="Voices From Belarus" />](https://bysol.org/en/) [![Stand With Ukraine](https://raw.githubusercontent.com/vshymanskyy/StandWithUkraine/main/badges/StandWithUkraine.svg)](https://vshymanskyy.github.io/StandWithUkraine)
 
-Setup EKS cluster with necessary controllers, operators and monitoring stack. Similar projects:
+## Overview
+
+This project provides a ready-to-use configuration for setting up an AWS EKS cluster with all necessary controllers, operators, and monitoring stack. By using this configuration, DevOps engineers can save 1-2 months of work.
+
+### Key Features
+
+- **Node Group Templates**: Templates for creating Managed Node Groups and Fargate Profile linked to each availability zone individually.
+- **Default Settings and Integration**: Reasonable default values and integration between modules for seamless setup.
+- **Best-in-Class Modules**: Selection of the best modules for various purposes, such as ingress and monitoring.
+
+Similar projects:
 - [eks blueprints](https://github.com/aws-ia/terraform-aws-eks-blueprints/tree/main)
 - [tEKS](https://github.com/particuleio/teks)
 - [eks demo](https://github.com/awslabs/eksdemo)
 
-Time track:
+### Development Time
+
 - [Filipp Frizzy](https://github.com/Friz-zy/): 181h 30m
 
 ## About the Author
 
-I'm Filipp - Lead DevOps Engineer with 12+ years of experience based in Poland (utc+2). Currently I'm open to work and considering Senior, Lead or Architect DevOps role with b2b contract from 7k$\mo and 100% remote. I have extensive experience as a primary or lead DevOps engineer in product teams and startups. If you are looking for a DevOps engineer for a project, then contact me on [linkedin](https://www.linkedin.com/in/filipp-frizzy-289a0360/).
+I'm Filipp - a Lead DevOps Engineer with 12+ years of experience, currently based in Poland (UTC+2). I am open to work and considering Senior, Lead, or Architect DevOps roles with a B2B contract from $7k/month and 100% remote. I have extensive experience as a primary or lead DevOps engineer in product teams and startups. If you are looking for a DevOps engineer for a project, contact me on [LinkedIn](https://www.linkedin.com/in/filipp-frizzy-289a0360/).
 
 From my side:
-- I have been working as Ops and DevOps engineer since 2012, including more than 7 years of experience working with UK & US teams
-- I have experience as Single, Main or Lead DevOps for small teams of other Ops people
-- I have experience with migration of services into Docker environment, including Kubernetes, Docker Swarm and AWS Elastic Containers
-- AWS is my primary cloud since 2015, but manage Azure or GCP also not a big problem for me
-- I have experience with Gitlab, Github, Jenkins, Argocd and Fluxcd CI & CD
-- I write Terraform, Terragrunt, Asible, Saltstack and other IaC setups
-- I solved few disasters in production with various K8S setups
-- I can do SQL and NoSQL HA setups, like Galera Mysql, Mongodb, Kafka, ZooKeeper, Clickhouse, Redis and so one
-- I did a lot of monitoring solutions with Prometheus\Victoriametrics, EFK, Zabbix and so one
-- I have 2 open source projects with more than 1k stars
+- Working as Ops and DevOps engineer since 2012, with over 7 years of experience with UK & US teams.
+- Experience as Single, Main, or Lead DevOps for small teams of other Ops people.
+- Migration of services into Docker environments, including Kubernetes, Docker Swarm, and AWS Elastic Containers.
+- AWS is my primary cloud since 2015
+- Proficient with GitLab, GitHub, Jenkins, ArgoCD, and FluxCD CI & CD.
+- Writing Terraform, Terragrunt, Ansible, SaltStack, and other IaC setups.
+- Solved several production disasters with various Kubernetes setups.
+- Skilled in SQL and NoSQL HA setups, like Galera MySQL, MongoDB, Kafka, ZooKeeper, Clickhouse, Redis, etc.
+- Developed many monitoring solutions with Prometheus, VictoriaMetrics, EFK, Zabbix, etc.
+- Authored 2 open source projects with over 1k stars.
 
-## What is included
+## Included Components
 
 | Description | Purpose | Enabled | DNS |
 | --- | --- | --- | --- |
@@ -61,25 +72,26 @@ From my side:
 
 ## What is not included right now
 
-- email integration
-- dns integration
-- alert rules
-- resources limits
-- ci & cd integration
-- network policies
-- host-based pod segregation
-- ...
+- Email integration
+- DNS integration
+- Alert rules
+- Resource limits
+- CI & CD integration
+- Network policies
+- Host-based pod segregation
 
-## Depend on
+## Dependencies
+
 - terraform
 - aws cli
 - kubectl
 - [terraform-aws-eks](https://github.com/terraform-aws-modules/terraform-aws-eks)
 - [aws-ia/eks-blueprints-addons/aws](https://github.com/aws-ia/terraform-aws-eks-blueprints-addons)
 
-This module contain local-exec block with `kubectl patch` for applying `tolerations` and `nodeSelector` deployments in `kube-system` namespace, that will work only in unix shell, so it will fail on Windows. This patch is necessary as some of eks addons currently doesn't support `tolerations` and `nodeSelector` in their configurations, but only necessary if you will use host nodes with taints to separate `management` processes from other. You can disable it by set `apply_kubectl_patch` variable to `false`.
+This module contains a local-exec block with `kubectl patch` for applying `tolerations` and `nodeSelector` deployments in the `kube-system` namespace, which will only work in a Unix shell, and will fail on Windows. This patch is necessary as some EKS addons currently don't support `tolerations` and `nodeSelector` in their configurations, but it is only necessary if you use host nodes with taints to separate `management` processes from others. You can disable it by setting the `apply_kubectl_patch` variable to `false`.
 
 ## Example
+
 ```
 cd example
 terraform init
@@ -88,38 +100,41 @@ terraform apply
 terraform output all
 ```
 
-to destroy everything run (you may need to run it twice one by one)
+To destroy everything, run (you may need to run it twice):
 ```
 terraform destroy -auto-approve
 ```
 
-force destroy in case of problems
+Force destroy in case of problems:
 ```
 helm ls -a --all-namespaces | awk 'NR > 1 { print  "-n "$2, $1}' | xargs -L1 helm delete
 kubectl delete all --all --all-namespaces
 terraform destroy -auto-approve
 ```
 
-After `terraform destroy` check ec2 volumes for unused disks as aws-ebs-csi-driver doesn't delete it by default after deleting helm releases.
+After `terraform destroy`, check EC2 volumes for unused disks as the aws-ebs-csi-driver doesn't delete them by default after deleting helm releases.
 
 ## Security
 
-`victoria-metrics-k8s-stack` deployed without internal password protection. Multiple charts such as `apisix`, `qryn` and `uptrace` contain explicit passwords in the values and do not use k8s secrets.
+`victoria-metrics-k8s-stack` is deployed without internal password protection. Multiple charts such as `apisix`, `qryn`, and `uptrace` contain explicit passwords in the values and do not use Kubernetes secrets.
 
-## Upgrading process
+## Upgrading Process
 
-Helm upgrade `reset_values` flag set to `true` for everything except databases like postgresql and clickhouse, see this [explain](https://shipmight.com/blog/understanding-helm-upgrade-reset-reuse-values)
+Helm upgrade `reset_values` flag is set to `true` for everything except databases like PostgreSQL and Clickhouse. See this [explanation](https://shipmight.com/blog/understanding-helm-upgrade-reset-reuse-values).
 
 ## Outputs
 
-Check the [./example/outputs.example](./example/outputs.example) file to get an example of the output. For setting DNS you can describe ingress external address with kubectl: `kubectl get service/apisix-ingress-controller-apisix-gateway -n ingress-apisix`.
+Check the [./example/outputs.example](./example/outputs.example) file to get an example of the output. For setting DNS, you can describe the ingress external address with `kubectl`:
+```
+kubectl get service/apisix-ingress-controller-apisix-gateway -n ingress-apisix
+```
 
-Also `~/.kube/eks-${account_id}-${region}-${cluster_name}` kubeconfig will be created by `aws eks` utility.
+Additionally, a kubeconfig file `~/.kube/eks-${account_id}-${region}-${cluster_name}` will be created by the `aws eks` utility.
 
 ## Support
 
-You can support this or any other of my projects
-  - [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/filipp_frizzy)
-  - [donationalerts.com/r/filipp_frizzy](https://www.donationalerts.com/r/filipp_frizzy)
-  - ETH 0xCD9fC1719b9E174E911f343CA2B391060F931ff7
-  - BTC bc1q8fhsj24f5ncv3995zk9v3jhwwmscecc6w0tdw3
+You can support this or any other of my projects:
+- [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/filipp_frizzy)
+- [donationalerts.com/r/filipp_frizzy](https://www.donationalerts.com/r/filipp_frizzy)
+- ETH 0xCD9fC1719b9E174E911f343CA2B391060F931ff7
+- BTC bc1q8fhsj24f5ncv3995zk9v3jhwwmscecc6w0tdw3
