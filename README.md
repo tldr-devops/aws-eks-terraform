@@ -9,9 +9,9 @@ This project provides a ready-to-use configuration for setting up an AWS EKS clu
 
 ### Key Features
 
+- **Adaptation for small clusters**: Many modules, especially [Grafana monitoring stack](https://grafana.com/about/grafana-stack/), are created with the intention of being used in large clusters. I understand the pain of small projects, so I tried to create a setup that is as simple and efficient as possible. For example, [VictoriaMetrics](https://victoriametrics.com/) stack selected as best prometheus-like monitoring engine and [Uptrace](https://uptrace.dev/) with AWS S3 backend selected for long term metrics, logs and traces storage.
 - **Node Group Templates**: Templates for creating Managed Node Groups and Fargate Profile linked to each availability zone individually.
 - **Default Settings and Integration**: Reasonable default values and integration between modules for seamless setup.
-- **Best-in-Class Modules**: Selection of the best modules for various purposes, such as ingress and monitoring.
 
 Similar projects:
 - [eks blueprints](https://github.com/aws-ia/terraform-aws-eks-blueprints/tree/main)
