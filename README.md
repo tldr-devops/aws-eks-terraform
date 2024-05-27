@@ -8,6 +8,25 @@ Setup EKS cluster with necessary controllers, operators and monitoring stack. Si
 - [tEKS](https://github.com/particuleio/teks)
 - [eks demo](https://github.com/awslabs/eksdemo)
 
+Time track:
+- [Filipp Frizzy](https://github.com/Friz-zy/): 181h 30m
+
+## About the Author
+
+I'm Filipp - Lead DevOps Engineer with 12+ years of experience based in Poland (utc+2). Currently I'm open to work and considering Senior, Lead or Architect DevOps role with b2b contract from 7k$\mo and 100% remote. I have extensive experience as a primary or lead DevOps engineer in product teams and startups. If you are looking for a DevOps engineer for a project, then contact me on [linkedin](https://www.linkedin.com/in/filipp-frizzy-289a0360/).
+
+From my side:
+- I have been working as Ops and DevOps engineer since 2012, including more than 7 years of experience working with UK & US teams
+- I have experience as Single, Main or Lead DevOps for small teams of other Ops people
+- I have experience with migration of services into Docker environment, including Kubernetes, Docker Swarm and AWS Elastic Containers
+- AWS is my primary cloud since 2015, but manage Azure or GCP also not a big problem for me
+- I have experience with Gitlab, Github, Jenkins, Argocd and Fluxcd CI & CD
+- I write Terraform, Terragrunt, Asible, Saltstack and other IaC setups
+- I solved few disasters in production with various K8S setups
+- I can do SQL and NoSQL HA setups, like Galera Mysql, Mongodb, Kafka, ZooKeeper, Clickhouse, Redis and so one
+- I did a lot of monitoring solutions with Prometheus\Victoriametrics, EFK, Zabbix and so one
+- I have 2 open source projects with more than 1k stars
+
 ## What is included
 
 | Description | Purpose | Enabled | DNS |
@@ -96,16 +115,6 @@ Helm upgrade `reset_values` flag set to `true` for everything except databases l
 Check the [./example/outputs.example](./example/outputs.example) file to get an example of the output. For setting DNS you can describe ingress external address with kubectl: `kubectl get service/apisix-ingress-controller-apisix-gateway -n ingress-apisix`.
 
 Also `~/.kube/eks-${account_id}-${region}-${cluster_name}` kubeconfig will be created by `aws eks` utility.
-
-## About the Author
-
-Hello, everyone! My name is Filipp, and I have been working with high load distribution systems and services, security, monitoring, continuous deployment and release management (DevOps domain) since 2012.
-
-One of my passions is developing DevOps solutions and contributing to the open-source community. By sharing my knowledge and experiences, I strive to save time for both myself and others while fostering a culture of collaboration and learning.
-
-I had to leave my home country, Belarus, due to my participation in [protests against the oppressive regime of dictator Lukashenko](https://en.wikipedia.org/wiki/2020%E2%80%932021_Belarusian_protests), who maintains a close affiliation with Putin. Since then, I'm trying to build my life from zero in other countries.
-
-If you are seeking a skilled DevOps lead or architect to enhance your project, I invite you to connect with me on [LinkedIn](https://www.linkedin.com/in/filipp-frizzy-289a0360/) or explore my valuable contributions on [GitHub](https://github.com/Friz-zy/). Let's collaborate and create some cool solutions together :)
 
 ## Support
 
