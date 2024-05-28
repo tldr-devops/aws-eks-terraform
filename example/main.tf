@@ -122,7 +122,8 @@ module "vpc" {
 }
 
 module "eks" {
-  source = "../"
+  # source = "../"
+  source = "github.com/tldr-devops/aws-eks-terraform?ref=1.0"
 
   cluster_name                                    = local.cluster_name
   cluster_version                                 = local.cluster_version
