@@ -39,6 +39,8 @@ locals {
   service_account = "qryn-clickhouse"
 
   # https://github.com/bitnami/charts/blob/main/bitnami/clickhouse/values.yaml
+  # https://uptrace.dev/get/config.html#s3-storage
+  # https://altinity.com/blog/clickhouse-mergetree-on-s3-administrative-best-practices
   clickhouse_values  = [
     <<-EOT
       shards: 1
@@ -48,7 +50,7 @@ locals {
         existingSecret: "qryn-clickhouse-password"
         existingSecretKey: "password"
       persistence:
-        size: 5Gi
+        size: 10Gi
       automountServiceAccountToken: true
       serviceAccount:
         create: true
@@ -73,18 +75,26 @@ locals {
                       <cache_enabled>true</cache_enabled>
                       <data_cache_enabled>true</data_cache_enabled>
                       <enable_filesystem_cache>true</enable_filesystem_cache>
-                      <cache_on_write_operations>true</cache_on_write_operations>
-                      <max_cache_size>4Gi</max_cache_size>
+                      <cache_on_write_operations>false</cache_on_write_operations>
+                      <max_cache_size>2Gi</max_cache_size>
                       <cache_path>/bitnami/clickhouse/data/disks/s3_default/cache/</cache_path>
                   </disk_s3>
               </disks>
               <policies>
                   <policy_s3_only>
+                      <!-- items with equal priorities are ordered by their position in config -->
                       <volumes>
-                          <volume_s3>
+                          <hot>
+                              <disk>default</disk>
+                          </hot>
+                          <cold>
                               <disk>disk_s3</disk>
-                          </volume_s3>
+                              <prefer_not_to_merge>true</prefer_not_to_merge>
+                              <perform_ttl_move_on_insert>0</perform_ttl_move_on_insert>
+                          </cold>
                       </volumes>
+                      <!-- move data to s3 when disk usage will be more than 90% -->
+                      <move_factor>0.2</move_factor>
                   </policy_s3_only>
               </policies>
           </storage_configuration>

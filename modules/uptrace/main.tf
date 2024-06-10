@@ -146,6 +146,8 @@ locals {
   service_account = "uptrace-clickhouse"
 
   # https://github.com/bitnami/charts/blob/main/bitnami/clickhouse/values.yaml
+  # https://uptrace.dev/get/config.html#s3-storage
+  # https://altinity.com/blog/clickhouse-mergetree-on-s3-administrative-best-practices
   clickhouse_values  = [
     <<-EOT
       shards: 1
@@ -155,7 +157,7 @@ locals {
         existingSecret: "uptrace-clickhouse-password"
         existingSecretKey: "password"
       persistence:
-        size: 5Gi
+        size: 10Gi
       automountServiceAccountToken: true
       serviceAccount:
         create: true
@@ -181,7 +183,7 @@ locals {
                       <cache_enabled>true</cache_enabled>
                       <data_cache_enabled>true</data_cache_enabled>
                       <enable_filesystem_cache>true</enable_filesystem_cache>
-                      <cache_on_write_operations>true</cache_on_write_operations>
+                      <cache_on_write_operations>false</cache_on_write_operations>
                       <max_cache_size>1Gi</max_cache_size>
                       <cache_path>/bitnami/clickhouse/data/disks/s3_default/cache/</cache_path>
                   </s3_default>
@@ -194,7 +196,7 @@ locals {
                       <cache_enabled>true</cache_enabled>
                       <data_cache_enabled>true</data_cache_enabled>
                       <enable_filesystem_cache>true</enable_filesystem_cache>
-                      <cache_on_write_operations>true</cache_on_write_operations>
+                      <cache_on_write_operations>false</cache_on_write_operations>
                       <max_cache_size>1Gi</max_cache_size>
                       <cache_path>/bitnami/clickhouse/data/disks/s3_metrics/cache/</cache_path>
                   </s3_metrics>
@@ -207,34 +209,13 @@ locals {
                       <cache_enabled>true</cache_enabled>
                       <data_cache_enabled>true</data_cache_enabled>
                       <enable_filesystem_cache>true</enable_filesystem_cache>
-                      <cache_on_write_operations>true</cache_on_write_operations>
+                      <cache_on_write_operations>false</cache_on_write_operations>
                       <max_cache_size>1Gi</max_cache_size>
                       <cache_path>/bitnami/clickhouse/data/disks/s3_spans/cache/</cache_path>
                   </s3_spans>
               </disks>
               <policies>
                   <default>
-                      <volumes>
-                          <volume_s3_default>
-                              <disk>s3_default</disk>
-                          </volume_s3_default>
-                      </volumes>
-                  </default>
-                  <s3_metrics>
-                      <volumes>
-                          <volume_s3_metrics>
-                              <disk>s3_metrics</disk>
-                          </volume_s3_metrics>
-                      </volumes>
-                  </s3_metrics>
-                  <s3_spans>
-                      <volumes>
-                          <volume_s3_spans>
-                              <disk>s3_spans</disk>
-                          </volume_s3_spans>
-                      </volumes>
-                  </s3_spans>
-                  <duo>
                       <!-- items with equal priorities are ordered by their position in config -->
                       <volumes>
                           <hot>
@@ -243,11 +224,42 @@ locals {
                           <cold>
                               <disk>s3_default</disk>
                               <prefer_not_to_merge>true</prefer_not_to_merge>
+                              <perform_ttl_move_on_insert>0</perform_ttl_move_on_insert>
                           </cold>
                       </volumes>
                       <!-- move data to s3 when disk usage will be more than 90% -->
-                      <move_factor>0.1</move_factor>
-                  </duo>
+                      <move_factor>0.2</move_factor>
+                  </default>
+                  <s3_metrics>
+                      <!-- items with equal priorities are ordered by their position in config -->
+                      <volumes>
+                          <hot>
+                              <disk>default</disk>
+                          </hot>
+                          <cold>
+                              <disk>s3_metrics</disk>
+                              <prefer_not_to_merge>true</prefer_not_to_merge>
+                              <perform_ttl_move_on_insert>0</perform_ttl_move_on_insert>
+                          </cold>
+                      </volumes>
+                      <!-- move data to s3 when disk usage will be more than 90% -->
+                      <move_factor>0.2</move_factor>
+                  </s3_metrics>
+                  <s3_spans>
+                      <!-- items with equal priorities are ordered by their position in config -->
+                      <volumes>
+                          <hot>
+                              <disk>default</disk>
+                          </hot>
+                          <cold>
+                              <disk>s3_spans</disk>
+                              <prefer_not_to_merge>true</prefer_not_to_merge>
+                              <perform_ttl_move_on_insert>0</perform_ttl_move_on_insert>
+                          </cold>
+                      </volumes>
+                      <!-- move data to s3 when disk usage will be more than 90% -->
+                      <move_factor>0.2</move_factor>
+                  </s3_spans>
               </policies>
           </storage_configuration>
         </clickhouse>
@@ -284,14 +296,14 @@ locals {
         logLinePrefix: ""
         logTimezone: ""
       postgresqlDataDir: /bitnami/postgresql/data
-      persistence:
-        enabled: true
-        mountPath: /bitnami/postgresql
-        size: 1Gi
       readReplicas:
         replicaCount: 0
       primary:
         resourcesPreset: "none"
+        persistence:
+          enabled: true
+          mountPath: /bitnami/postgresql
+          size: 512Mi
     EOT
   ]
 }
