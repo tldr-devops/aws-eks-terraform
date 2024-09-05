@@ -2,6 +2,8 @@ provider "aws" {
   region = "us-east-2"
 }
 
+data "aws_region" "current" {}
+
 locals {
   cluster_name        = "test"
   admin_email         = "test@test.com"
@@ -121,9 +123,26 @@ module "vpc" {
   tags = local.tags
 }
 
+resource "aws_vpc_endpoint" "s3" {
+  vpc_id              = module.vpc.vpc_id
+  service_name        = "com.amazonaws.${data.aws_region.current.name}.s3"
+  route_table_ids     = concat(
+    module.vpc.public_route_table_ids,
+    module.vpc.private_route_table_ids,
+    module.vpc.intra_route_table_ids
+  )
+
+  tags = merge(
+    local.tags,
+    {
+      Name = "${module.vpc.vpc_id} S3 Gateway Endpoint"
+    }
+  )
+}
+
 module "eks" {
   # source = "../"
-  source = "github.com/tldr-devops/aws-eks-terraform?ref=1.1"
+  source = "github.com/tldr-devops/aws-eks-terraform?ref=1.2"
 
   cluster_name                                    = local.cluster_name
   cluster_version                                 = local.cluster_version
